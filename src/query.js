@@ -92,9 +92,9 @@ export class Query {
       throw new Error("You need to select something before you can shift it");
 
     var part = this.parts[this.active],
-        alias = new Timeshift(part, offset);
+        timeshift = new Timeshift(part, offset);
     
-    this.parts[this.active] = alias;
+    this.parts[this.active] = timeshift;
     return this;
   }
 
