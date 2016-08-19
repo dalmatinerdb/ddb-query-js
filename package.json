@@ -4,7 +4,7 @@
   "description": "DalmatinerDB query builder",
   "main": "lib/index.js",
   "scripts": {
-    "prepublish": "grunt",
+    "prepublish": "grunt test build",
     "test": "grunt test"
   },
   "repository": {
