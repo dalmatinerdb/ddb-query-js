@@ -63,6 +63,13 @@ export class Query {
     return this;
   }
 
+  last(...args) {
+    this.duration = moment.duration(...args);
+    this.beginning = null;
+    this.ending = null;
+    return this;
+  }
+
   with(name, value) {
     this.variables[name] = value;
     return this;
@@ -132,10 +139,32 @@ export class Query {
    * Internal methods
    */
 
+  _encodeTime(m) {
+    return m.utc().format('"YYYY-MM-DD HH:mm:ss"');
+  }
+
+  _encodeDuration() {
+    var inSecs = Math.max(Math.round(this.duration.asSeconds()), 1);
+    return inSecs + 's';
+  }
+
   _encodeRange() {
-    var ending = this.ending.utc().format("YYYY-MM-DD HH:mm:ss"),
-        duration = Math.round((this.ending - this.beginning) / 1000);
-    return `BEFORE "${ending}" FOR ${duration}s`;
+    if (this.ending && this.beginning) {
+      let start = this._encodeTime(this.beginning),
+          end = this._encodeTime(this.ending);
+      return `BETWEEN ${start} AND ${end}`;
+    } else if (this.ending && this.duration) {
+      let end = this._encodeTime(this.ending),
+          duration = this._encodeDuration();
+      return `BEFORE ${end} FOR ${duration}`;
+    } else if (this.beginning && this.duration) {
+      let start = this._encodeTime(this.beginning),
+          duration = this._encodeDuration();
+      return `AFTER ${start} FOR ${duration}`;
+    } else if (this.duration) {
+      return `LAST ${this._encodeDuration()}`;
+    }
+    return '';
   }
 
   _encodeParts() {
