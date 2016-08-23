@@ -2,11 +2,12 @@
 
 import chai from 'chai';
 import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 import source_map from 'source-map-support';
 import {Query} from "./query";
 
 source_map.install({handleUncaughtExceptions: false});
-
+chai.use(sinonChai);
 
 describe('Query', function() {
   var expect = chai.expect,
@@ -234,4 +235,31 @@ describe('Query', function() {
     });
   });
 
+  describe('#exec', function() {
+    var ajax, xhr_mock;
+
+    beforeEach(function() {
+      xhr_mock = {
+        then: sinon.spy()
+      },
+      ajax = sinon.stub()
+        .returns(xhr_mock);
+    });
+    
+    it('should call ajax with default settings', function() {
+      var xhr = query.from('some-org')
+            .select(['base', 'cpu'])
+            .last(10, 'minutes')
+            .exec(ajax);
+      expect(ajax).to.have.been.calledWith({
+        url: 'http://localhost:8080',
+        data: {
+          q: "SELECT 'base'.'cpu' FROM 'some-org' LAST 600s"
+        },
+        headers: {
+          accept: 'application/json'
+        }
+      });
+    });
+  });
 });

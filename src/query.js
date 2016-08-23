@@ -123,6 +123,33 @@ export class Query {
     return this;
   }
 
+  exec(ajax, options = {}) {
+    var q = this.toString(),
+        settings = {data: {q: q}};
+
+    if (! ajax)
+      throw new Error("Missing ajax function");
+    
+    if (! options.url)
+      settings.url = 'http://localhost:8080'; // Default url
+
+    // TODO: add msgpack optional decoding, when msgpack-lite is reachable
+
+    if (! (options.headers && options.headers.accept)) {
+      if (! settings.headers) {
+        settings.headers = {};
+      }
+      settings.headers.accept = 'application/json';
+    }
+
+    Object.assign(settings, options);
+    return ajax(settings)
+      .then((resp) => {
+        console.log('Recived response:', resp);
+        return resp;
+      });
+  }
+
   /**
    * Reading methods
    */
@@ -145,6 +172,7 @@ export class Query {
 
   _encodeDuration() {
     var inSecs = Math.max(Math.round(this.duration.asSeconds()), 1);
+
     return inSecs + 's';
   }
 
