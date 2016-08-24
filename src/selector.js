@@ -1,26 +1,16 @@
-export class Selector {
+export default class Selector {
 
-  constructor(collection, metric, variables) {
+  constructor(collection, metric) {
     this.collection = collection;
     this.metric = metric.map(function (mpart) {
       return mpart.value ? mpart.value : mpart.toString();
     });
-    this.variables = variables;
-  }
-
-  where(condition) {
-    this.condition = condition;
-    return this;
   }
 
   toString() {
     var metric = this._encodeMetric(),
-        collection = this._encodeCollection(),
-        str = `${metric} FROM ${collection}`;
-    if (this.condition) {
-      str += ` WHERE ${this.condition}`;
-    }
-    return str;
+        collection = this._encodeCollection();
+    return  `${metric} FROM ${collection}`;
   }
 
   _encodeCollection() {

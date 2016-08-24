@@ -79,26 +79,32 @@ describe('Query', function() {
   describe('#select', function() {
 
     it('should be enough for simple query when combined with from statement', function() {
-      query.from('myorg')
-        .select(['base', 'cpu', 'system']);
-      expect(query.toUserString()).to.be
+      expect(
+        query.from('myorg')
+        .select(['base', 'cpu', 'system'])
+        .toString()
+      ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'myorg'");
     });
 
     it('should create multi part query when called multiple times', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'cpu', 'system'])
-        .select(['base', 'cpu', 'user']);
-      expect(query.toUserString()).to.be
+        .select(['base', 'cpu', 'user'])
+        .toString()
+      ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'myorg', 'base'.'cpu'.'user' FROM 'myorg'");
     });
 
     it('should create selector for most recent collection', function() {
-      query.from('first-org')
+      expect(
+        query.from('first-org')
         .select(['base', 'cpu', 'system'])
         .from('second-org')
-        .select(['base', 'cpu', 'user']);
-      expect(query.toUserString()).to.be
+        .select(['base', 'cpu', 'user'])
+        .toString()
+      ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org', 'base'.'cpu'.'user' FROM 'second-org'");
     });
 
@@ -107,54 +113,66 @@ describe('Query', function() {
   describe('#apply', function() {
 
     it('should apply function on active selection', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'network', 'eth0', 'sent'])
-        .apply('derivate');
-      expect(query.toUserString()).to.be
+        .apply('derivate')
+        .toString()
+      ).to.be
         .equal("SELECT derivate('base'.'network'.'eth0'.'sent' FROM 'myorg')");
     });
 
     it('should support function with extra argument', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'cpu'])
-        .apply('avg', ['30s']);
-      expect(query.toUserString()).to.be
+        .apply('avg', ['30s'])
+        .toString()
+      ).to.be
         .equal("SELECT avg('base'.'cpu' FROM 'myorg', 30s)");
     });
 
     it('should expand variables in function arguments', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'cpu'])
         .with('interval', '30s')
-        .apply('avg', ['$interval']);
-      expect(query.toUserString()).to.be
+        .apply('avg', ['$interval'])
+        .toString()
+      ).to.be
         .equal("SELECT avg('base'.'cpu' FROM 'myorg', 30s)");
     });
 
     it('should fail when variable is not defined', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'cpu'])
-        .apply('avg', ['$interval']);
-      expect(query.toUserString).to.throw(Error);
+        .apply('avg', ['$interval'])
+        .toString
+      ).to.throw(Error);
     });
 
     it('should allow for function chaining', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'network', 'eth0', 'sent'])
         .apply('derivate')
-        .apply('sum', ['30s']);
-      expect(query.toUserString()).to.be
+        .apply('sum', ['30s'])
+        .toString()
+      ).to.be
         .equal("SELECT sum(derivate('base'.'network'.'eth0'.'sent' FROM 'myorg'), 30s)");
     });
 
     it('should be applied only to last selection', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'cpu', 'user'])
         .select(['base', 'cpu', 'system'])
         .apply('max', [])
         .select(['base', 'cpu', 'idle'])
-        .apply('min', []);
-      expect(query.toUserString()).to.be.equal(
+        .apply('min', [])
+        .toString()
+      ).to.be.equal(
         "SELECT 'base'.'cpu'.'user' FROM 'myorg', " +
           "max('base'.'cpu'.'system' FROM 'myorg'), " +
           "min('base'.'cpu'.'idle' FROM 'myorg')"
@@ -166,30 +184,36 @@ describe('Query', function() {
   describe('#alias', function() {
 
     it('should alias simple selectors with from statement', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'cpu', 'system'])
-        .aliasBy('$1');
-      expect(query.toUserString()).to.be
+        .aliasBy('$1')
+        .toString()
+      ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'myorg' AS $1");
     });
 
     it('should alias chained functions', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'network', 'eth0', 'sent'])
         .apply('derivate')
         .apply('sum', ['30s'])
-        .aliasBy('$1');
-      expect(query.toUserString()).to.be
+        .aliasBy('$1')
+        .toString()
+      ).to.be
         .equal("SELECT sum(derivate('base'.'network'.'eth0'.'sent' FROM 'myorg'), 30s) AS $1");
     });
 
     it('should only alias selector for most recent collection', function() {
-      query.from('first-org')
+      expect(
+        query.from('first-org')
         .select(['base', 'cpu', 'system'])
         .from('second-org')
         .select(['base', 'cpu', 'user'])
-        .aliasBy('$1');
-      expect(query.toUserString()).to.be
+        .aliasBy('$1')
+        .toString()
+      ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org', 'base'.'cpu'.'user' FROM 'second-org' AS $1");
     });
 
@@ -198,39 +222,47 @@ describe('Query', function() {
   describe('#timeshift', function() {
 
     it('should timeshift simple selectors with from statement', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'cpu', 'system'])
-        .shiftBy('1h');
-      expect(query.toUserString()).to.be
+        .shiftBy('1h')
+        .toString()
+      ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'myorg' SHIFT BY 1h");
     });
 
     it('should timeshift chained functions', function() {
-      query.from('myorg')
+      expect(
+        query.from('myorg')
         .select(['base', 'network', 'eth0', 'sent'])
         .apply('derivate')
         .apply('sum', ['30s'])
-        .shiftBy('1h');
-      expect(query.toUserString()).to.be
+        .shiftBy('1h')
+        .toString()
+      ).to.be
         .equal("SELECT sum(derivate('base'.'network'.'eth0'.'sent' FROM 'myorg'), 30s) SHIFT BY 1h");
     });
 
     it('should only timeshift selector for most recent collection', function() {
-      query.from('first-org')
+      expect(
+        query.from('first-org')
         .select(['base', 'cpu', 'system'])
         .shiftBy('1h')
         .from('second-org')
-        .select(['base', 'cpu', 'user']);
-      expect(query.toUserString()).to.be
+        .select(['base', 'cpu', 'user'])
+        .toString()
+      ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org' SHIFT BY 1h, 'base'.'cpu'.'user' FROM 'second-org'");
     });
 
     it('should timeshift selectors with an alias applied', function() {
-      query.from('first-org')
+      expect(
+        query.from('first-org')
         .select(['base', 'cpu', 'system'])
         .shiftBy('1h')
-        .aliasBy('$1');
-      expect(query.toUserString()).to.be
+        .aliasBy('$1')
+        .toString()
+      ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org' SHIFT BY 1h AS $1");
     });
   });
@@ -247,7 +279,8 @@ describe('Query', function() {
     });
     
     it('should call ajax with default settings', function() {
-      var xhr = query.from('some-org')
+      var xhr = query
+            .from('some-org')
             .select(['base', 'cpu'])
             .last(10, 'minutes')
             .exec(ajax);

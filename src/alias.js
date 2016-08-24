@@ -1,11 +1,10 @@
-export class Alias {
+export default class Alias {
 
-  constructor(subject, name) {
-    this.subject = subject;
+  constructor(name) {
     this.name = name;
   }
 
   toString() {
-    return `${this.subject} AS ${this.name}`;
+    return `AS ${this.name}`;
   }
 }

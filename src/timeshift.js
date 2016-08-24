@@ -1,11 +1,10 @@
-export class Timeshift {
+export default class Timeshift {
 
-  constructor(subject, offset) {
-    this.subject = subject;
+  constructor(offset) {
     this.offset = offset;
   }
 
   toString() {
-    return `${this.subject} SHIFT BY ${this.offset}`;
+    return `SHIFT BY ${this.offset}`;
   }
 }

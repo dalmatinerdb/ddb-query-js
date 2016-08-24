@@ -1,25 +1,28 @@
 import moment from "moment";
 
-import {Condition} from "./condition.js";
-import {Selector} from "./selector.js";
-import {Function} from "./function.js";
-import {Alias} from "./alias.js";
-import {Timeshift} from "./timeshift.js";
+import Condition from "./condition.js";
+import Part from "./part.js";
+import Decoder from "./decoder.js";
+
+// Part methods that are exposed to Query top level api
+const PART_METHODS = [
+  'where',
+  'aliasBy',
+  'shiftBy',
+  'apply'
+];
 
 
 /**
  * DalmatinerDB Query builder.
  *
  * It provides chainable api to programatically assemble dalmatiner queries
- *
- * TODO: Make query immutable, so we can use it in layered fashion
  */
 export class Query {
 
   constructor() {
-    this.variables = {};
     this.parts = [];
-    this.selectors = [];
+    this.vars = {};
   }
 
   // TODO: maybe this statics should end up on main index level
@@ -36,95 +39,55 @@ export class Query {
   }
 
   /**
-   * Chain-able setters
+   * Chain-able query generators
+   *
+   * Each one of them will generate new query
    */
   from(c) {
-    this.collection = c.value ? c.value : c.toString();
-    return this;
+    var query = this._clone();
+    query.collection = c.value ? c.value : c.toString();
+    return query;
   }
 
   select(m) {
     if (! this.collection)
       throw new Error("You need to set collection (from statement) before selecting metric");
-    var selector = new Selector(this.collection, m);
-    this.selectors.push(selector);
-    this.parts.push(selector);
-    this.active = this.parts.length - 1;
-    return this;
+
+    var query = this._clone(),
+        part = new Part(this.collection, m);
+
+    query.parts = query.parts.concat(part);
+    return query;
   }
 
   beginningAt(t) {
-    this.beginning = moment(t);
-    return this;
+    var query = this._clone();
+    query.beginning = moment(t);
+    return query;
   }
 
   endingAt(t) {
-    this.ending = moment(t);
-    return this;
+    var query = this._clone();
+    query.ending = moment(t);
+    return query;
   }
 
   last(...args) {
-    this.duration = moment.duration(...args);
-    this.beginning = null;
-    this.ending = null;
-    return this;
+    var query = this._clone();    
+    query.duration = moment.duration(...args);
+    query.beginning = null;
+    query.ending = null;
+    return query;
   }
 
   with(name, value) {
-    this.variables[name] = value;
-    return this;
-  }
-
-  where(condition) {
-    if (! condition instanceof Condition) {
-      throw new Error("Invalid query condition");
-    }
-    this.selectors[this.active].where(condition);
-    return this;
-  }
-
-  aliasBy(name) {
-    if (this.active === void 0)
-      throw new Error("You need to select something before you can alias it");
-
-    var part = this.parts[this.active],
-        alias = new Alias(part, name);
-
-    this.parts[this.active] = alias;
-    return this;
-  }
-
-  shiftBy(offset) {
-    if (this.active === void 0)
-      throw new Error("You need to select something before you can shift it");
-
-    var part = this.parts[this.active],
-        timeshift = new Timeshift(part, offset);
-    
-    this.parts[this.active] = timeshift;
-    return this;
-  }
-
-  apply(fun, args = []) {
-    if (this.active === void 0)
-      throw new Error("You need to select something before you can apply functions");
-
-    var part = this.parts[this.active],
-        fargs = [part].concat(args),
-        f;
-
-    if (! (part instanceof Function ||
-           part instanceof Selector)) {
-      throw new Error("You can't apply more function once you have added alias or time shift");
-    }
-
-    f = new Function(fun, fargs, this.variables);
-    this.parts[this.active] = f;
+    this.vars[name] = value;
     return this;
   }
 
   exec(ajax, options = {}) {
     var q = this.toString(),
+        decoder = new Decoder(this),
         settings = {data: {q: q}};
 
     if (! ajax)
@@ -144,10 +107,7 @@ export class Query {
 
     Object.assign(settings, options);
     return ajax(settings)
-      .then((resp) => {
-        console.log('Recived response:', resp);
-        return resp;
-      });
+      .then(decoder.decode);
   }
 
   /**
@@ -155,16 +115,37 @@ export class Query {
    */
 
   toString() {
-    return this.toUserString() + ' ' + this._encodeRange();
-  }
-
-  toUserString() {
-    return 'SELECT ' + this._encodeParts().join(', ');
+    var parts = this._encodeParts().join(', '),
+        range = this._encodeRange(),
+        str = 'SELECT ' + parts;
+    if (range)
+      str += ' ' + range;
+    return str;
   }
 
   /**
    * Internal methods
    */
+
+  _clone() {
+    var query = Object.create(Query.prototype);
+    Object.assign(query, this);
+    return query;
+  }
+
+  _updatePart(method, ...args) {
+    if (this.parts.length === -1) 
+      throw new Error("You need to select something before doing any futher operations");
+
+    var parts = this.parts.concat(),
+        lastIdx = parts.length - 1,
+        last = parts[lastIdx],
+        query = this._clone(); 
+
+    parts[lastIdx] = last[method](...args);
+    query.parts = parts;
+    return query;
+  }
 
   _encodeTime(m) {
     return m.utc().format('"YYYY-MM-DD HH:mm:ss"');
@@ -196,6 +177,14 @@ export class Query {
   }
 
   _encodeParts() {
-    return this.parts.map(p => { return p.toString(); });
+    var vars = this.vars;
+    return this.parts.map(p => { return p.toString(vars); });
   }
 };
+
+
+PART_METHODS.forEach(function(method) {
+  Query.prototype[method] = function (...args) {
+    return this._updatePart(method, ...args);
+  };
+});

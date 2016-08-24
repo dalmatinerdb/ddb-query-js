@@ -1,21 +1,20 @@
-export class Function {
+export default class Function {
 
-  constructor(fun, args, vars) {
+  constructor(fun, args) {
     this.fun = fun;
     this.args = args;
-    this.vars = vars;
     this._encodeArg = this._encodeArg.bind(this);
   }
 
-  toString() {
-    var args = this.args.map(this._encodeArg);
+  toString(vars) {
+    var args = this.args.map((a) => this._encodeArg(a, vars));
     return `${this.fun}(${args.join(', ')})`;
   }
 
-  _encodeArg(arg) {
+  _encodeArg(arg, vars) {
     if (typeof arg === 'string' && arg[0] === '$') {
       let varname = arg.slice(1);
-      arg = this.vars[varname];
+      arg = vars[varname];
       if (arg === void 0) {
         throw new Error(`Variable ${varname} was not declared`);
       }

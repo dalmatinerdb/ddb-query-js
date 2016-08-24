@@ -1,4 +1,4 @@
-export class Condition {
+export default class Condition {
 
   constructor (op, ...args) {
     this.op = op;

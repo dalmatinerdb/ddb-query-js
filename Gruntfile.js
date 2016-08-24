@@ -23,8 +23,7 @@ module.exports = function(grunt) {
         options: {
           plugins: [
             'transform-es2015-modules-systemjs',
-            'transform-es2015-for-of',
-            'transform-object-assign']
+            'transform-es2015-for-of']
         },
         files: [{
           cwd: 'src',
