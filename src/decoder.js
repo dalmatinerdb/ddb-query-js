@@ -1,17 +1,21 @@
 import moment from "moment";
 
 
-function decode(query, resp) {
-  var {s, t, d} = resp,
-      start = moment(s * 1000);
-  
-  return resp;
+export default class Decoder {
+
+  constructor(query, options) {
+    this.decode = (r) => decode(query, r, options);
+  };
 }
 
 
-export default class Decoder {
+function decode(query, resp, options) {
+  var {s, t, d} = resp,
+      parts = query.parts,
+      start = moment(s * 1000),
+      series = [];
 
-  constructor(query) {
-    this.decode = (r) => decode(query, r);
-  };
+  series = Array.prototype.map.call(d, function() {
+  });
+  return {start, series};
 }

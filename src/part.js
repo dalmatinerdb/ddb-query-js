@@ -19,9 +19,9 @@ export default class Part {
     return part;
   }
 
-  aliasBy(name) {
+  aliasBy(label) {
     var part = this._clone(),
-        alias = new Alias(name);
+        alias = new Alias(label);
     part.alias = alias;
     return part;
   }
@@ -38,6 +38,20 @@ export default class Part {
         fargs = [this._getSelector()].concat(args),
         fn = new Function(fun, fargs);
     part.fn = fn;
+    return part;
+  }
+
+  prefixWith(prefix) {
+    var part = this._clone(),
+        alias = this.alias || new Alias();
+    part.alias = alias.prefixWith(prefix);
+    return part;
+  }
+
+  annotateWith(...tags) {
+    var part = this._clone(),
+        alias = this.alias || new Alias();
+    part.alias = alias.annotateWith(...tags);
     return part;
   }
 

@@ -7,9 +7,10 @@ import Decoder from "./decoder.js";
 // Part methods that are exposed to Query top level api
 const PART_METHODS = [
   'where',
-  'aliasBy',
+  'apply',
   'shiftBy',
-  'apply'
+  'aliasBy',
+  'annotateWith'
 ];
 
 
@@ -18,7 +19,7 @@ const PART_METHODS = [
  *
  * It provides chainable api to programatically assemble dalmatiner queries
  */
-export class Query {
+export default class Query {
 
   constructor() {
     this.parts = [];
@@ -86,25 +87,39 @@ export class Query {
   }
 
   exec(ajax, options = {}) {
-    var q = this.toString(),
-        decoder = new Decoder(this),
-        settings = {data: {q: q}};
+    var decoder = new Decoder(this, options),
+        settings = {data: {}},
+        query = this._clone(),
+        parts = query.parts;
 
     if (! ajax)
       throw new Error("Missing ajax function");
+
+    parts = parts.map((part, idx) => {
+      return part.prefixWith(['' + idx]);
+    });
+    if (options.applyConfidence) {
+      parts = parts.reduce(function(acc, part) {
+        let prefix = part.alias.prefix,
+            vpart = part.prefixWith(prefix.concat('v')),
+            cpart = part.prefixWith(prefix.concat('c'));
+        return acc.concat(vpart, cpart);
+      }, []);
+    }
+    query.parts = parts;
+    settings.data.q = query.toString();
     
     if (! options.url)
       settings.url = 'http://localhost:8080'; // Default url
-
-    // TODO: add msgpack optional decoding, when msgpack-lite is reachable
 
     if (! (options.headers && options.headers.accept)) {
       if (! settings.headers) {
         settings.headers = {};
       }
+      // TODO: add msgpack optional decoding, when msgpack-lite is reachable
       settings.headers.accept = 'application/json';
     }
-
+    
     Object.assign(settings, options);
     return ajax(settings)
       .then(decoder.decode);

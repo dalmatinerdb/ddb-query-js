@@ -4,7 +4,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import source_map from 'source-map-support';
-import {Query} from "./query";
+import Query from "./query";
 
 source_map.install({handleUncaughtExceptions: false});
 chai.use(sinonChai);
@@ -181,7 +181,7 @@ describe('Query', function() {
 
   });
 
-  describe('#alias', function() {
+  describe('#aliasBy', function() {
 
     it('should alias simple selectors with from statement', function() {
       expect(
@@ -219,7 +219,7 @@ describe('Query', function() {
 
   });
 
-  describe('#timeshift', function() {
+  describe('#shiftBy', function() {
 
     it('should timeshift simple selectors with from statement', function() {
       expect(
@@ -267,6 +267,21 @@ describe('Query', function() {
     });
   });
 
+  describe('#annotateWith', function() {
+    it('should allow to build queries with tag annotations', function() {
+      expect(
+        query
+          .from('best-org')
+          .select(['base', 'cpu'])
+          .annotateWith(['dl', 'hostname'],
+                        ['dl', 'source'],
+                        ['', 'custom'])
+          .toString()
+      ).to.be
+        .equal("SELECT 'base'.'cpu' FROM 'best-org' AS $dl:'hostname'.$dl:'source'.$'custom'");
+    });
+  });
+
   describe('#exec', function() {
     var ajax, xhr_mock;
 
@@ -287,12 +302,30 @@ describe('Query', function() {
       expect(ajax).to.have.been.calledWith({
         url: 'http://localhost:8080',
         data: {
-          q: "SELECT 'base'.'cpu' FROM 'some-org' LAST 600s"
+          q: "SELECT 'base'.'cpu' FROM 'some-org' AS '0' LAST 600s"
         },
         headers: {
           accept: 'application/json'
         }
       });
+    });
+
+    it('should allow for query with confidence mapping', function() {
+      var xhr = query
+            .from('some-org')
+            .select(['base', 'cpu'])
+            .apply('avg', ['10s'])
+            .annotateWith(['dl', 'hostname'])
+            .last(10, 'minutes')
+            .exec(ajax, {applyConfidence: true});
+      expect(ajax).to.have.been
+        .calledWith(sinon.match(
+          {data:
+           {q: "SELECT " +
+            "avg('base'.'cpu' FROM 'some-org', 10s) AS '0'.'v'.$dl:'hostname', " +
+            "avg('base'.'cpu' FROM 'some-org', 10s) AS '0'.'c'.$dl:'hostname' " +
+            "LAST 600s"
+           }}));
     });
   });
 });
