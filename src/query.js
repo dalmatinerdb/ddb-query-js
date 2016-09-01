@@ -119,7 +119,7 @@ export default class Query {
       // TODO: add msgpack optional decoding, when msgpack-lite is reachable
       settings.headers.accept = 'application/json';
     }
-    
+
     Object.assign(settings, options);
     return ajax(settings)
       .then(decoder.decode);
