@@ -17,8 +17,10 @@ function decode(query, resp, options = {}) {
 
   series = Array.prototype.map.call(d, function({n, r, v}) {
     var sections = decodeN(n),
-        idx = parseInt(sections[0]),
+        idx = parseInt(sections.shift()),
         qpart = parts[idx],
+        tagDefinitions = qpart.alias && qpart.alias.tags || [],
+        tags = {},
         name;
 
     if (qpart.alias && qpart.alias.label) {
@@ -27,7 +29,12 @@ function decode(query, resp, options = {}) {
       name = qpart.selector.toString();
     }
 
-    return {qpart, name,
+    for (let i = 0; i < tagDefinitions.length; i++) {
+      let tag = tagDefinitions[i];
+      tags[tagKey(tag)] = sections[i];
+    }
+
+    return {qpart, name, tags,
             points: decodePoints(v, start.valueOf(), r)};
   });
   return {start, series};
@@ -50,7 +57,16 @@ function decodeN(n) {
 
 function decodeNSection(section) {
   if (section[0] == "'" && section[section.length - 1] == "'") {
-    section = section.slice(1, -1);
+    section = section.slice(1, -1).replace(/\\(.)/g, '$1');
   }
   return section;
+}
+
+function tagKey(tag) {
+  if (Array.isArray(tag)) {
+    if (tag[0])
+      return `${tag[0]}:${tag[1]}`;
+    return tag[1];
+  }
+  return tag;
 }

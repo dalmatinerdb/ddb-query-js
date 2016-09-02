@@ -52,7 +52,7 @@ describe('Decoder', function () {
   it('should decode start time', function() {
     expect(
       data(
-        {n: '0',
+        {n: "'0'",
          s: 1472738400,
          d: []})
         .afterDecoding()
@@ -66,11 +66,11 @@ describe('Decoder', function () {
       data(
         {s: 1472738400,
          d: [{
-           n: '0',
+           n: "'0'",
            r: 1000,
            v: [5, 6, 7, 8, 9, 10]
          },{
-           n: '0',
+           n: "'0'",
            r: 2000,
            v: [8, 10, 12]
          }]})
@@ -93,15 +93,15 @@ describe('Decoder', function () {
           .select(['base', 'load_5min']),
         decoded = data({s: 1472738400,
                         d: [{
-                          n: '0',
+                          n: "'0'",
                           r: 1000,
                           v: [5, 6, 7]
                         },{
-                          n: '0',
+                          n: "'0'",
                           r: 1000,
                           v: [8, 9, 10]
                         },{
-                          n: '1',
+                          n: "'1'",
                           r: 1000,
                           v: [0.1, 0.2, 0.3]
                         }]})
@@ -117,7 +117,7 @@ describe('Decoder', function () {
     expect(
       data({s: 1472738400,
             d: [{
-              n: '0',
+              n: "'0'",
               r: 1000,
               v: [5, 6, 7]}]})
         .commingFromQuery(new Query().from('my-org')
@@ -128,11 +128,11 @@ describe('Decoder', function () {
       .deep.property('series[0].name', 'Cpu usage');
   });
 
-  it('Shoudl fall-back to selector as label', function () {
+  it('should fall-back to selector as label', function () {
     expect(
       data({s: 1472738400,
             d: [{
-              n: '0',
+              n: "'0'",
               r: 1000,
               v: [5, 6, 7]}]})
         .commingFromQuery(new Query().from('my-org')
@@ -141,9 +141,39 @@ describe('Decoder', function () {
     ).to.have
       .deep.property('series[0].name', "'base'.'cpu' FROM 'my-org'");
   });
-  
-  // n of a series is like: '0'.'c3bcee12-0680-4bf3-8237-f51b48330dd8'.'toms-mac'
-  it.skip('should decode tags from annotated data');
-  it.skip('Should decode escaped characters in annotated data');
+
+  it('should decode tags from annotated data', function () {
+    expect(
+      data({s: 1472738400,
+            d: [{
+              n: "'0'.'xxx-xxx'.'my-mac'",
+              r: 1000,
+              v: [5, 6, 7]}]})
+        .commingFromQuery(new Query().from('my-org')
+                          .select(['base', 'cpu'])
+                          .annotateWith('dl:source', 'dl:hostname'))
+        .afterDecoding()
+    ).to.have
+      .deep.property('series[0].tags')
+      .that.is.deep.equal({'dl:source': 'xxx-xxx',
+                           'dl:hostname': 'my-mac'});
+  });
+
+  it('should decode escaped characters in annotated data', function () {
+    expect(
+      data({s: 1472738400,
+            d: [{
+              n: "'0'.'Don\\'t mind quotes! (Even with second \\')'",
+              r: 1000,
+              v: [5, 6, 7]}]})
+        .commingFromQuery(new Query().from('my-org')
+                          .select(['base', 'cpu'])
+                          .annotateWith('note'))
+        .afterDecoding()
+    ).to.have
+      .deep.property('series[0].tags')
+      .that.is.deep.equal({'note': "Don't mind quotes! (Even with second ')"});
+  });
+
   it.skip('should combine and apply confidence if such option was present');
 });

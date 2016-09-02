@@ -69,7 +69,7 @@ function encodeSection(section) {
 
 function normalizeTag(tag) {
   if (typeof tag === 'string') {
-    let m = tag.match(/^\$(([a-z]*):)?(.*)$/);
+    let m = tag.match(/^(([a-z]*):)?(.*)$/);
     if (! m)
       throw new Error("Invalid alias variable: " + tag);
     let ns = m[2],

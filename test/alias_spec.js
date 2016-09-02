@@ -59,12 +59,10 @@ describe('Alias', function() {
     it('should parse tags provided in query variable format', function() {
       expect(
         alias
-          .annotateWith('$custom')
+          .annotateWith('custom')
           .toString()
       ).to.be
         .equal("AS $'custom'");
     });
-
-    it.skip('should de-duplicate tags');
   });
 });
