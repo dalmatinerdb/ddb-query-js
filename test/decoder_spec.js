@@ -4,7 +4,8 @@ import chai from 'chai';
 import sinon from 'sinon';
 import source_map from 'source-map-support';
 import moment from 'moment';
-import Decoder from "./decoder";
+import Decoder from './decoder';
+import Query from './query';
 
 source_map.install({handleUncaughtExceptions: false});
 
@@ -51,7 +52,8 @@ describe('Decoder', function () {
   it('should decode start time', function() {
     expect(
       data(
-        {s: 1472738400,
+        {n: '0',
+         s: 1472738400,
          d: []})
         .afterDecoding()
     ).to.have
@@ -64,12 +66,16 @@ describe('Decoder', function () {
       data(
         {s: 1472738400,
          d: [{
+           n: '0',
            r: 1000,
            v: [5, 6, 7, 8, 9, 10]
          },{
+           n: '0',
            r: 2000,
            v: [8, 10, 12]
          }]})
+        .commingFromQuery(new Query().from('my-org')
+                          .select(['base', 'cpu']))
         .afterDecoding()
     ).to.have
       .deep.property('series[1].points')
@@ -80,8 +86,64 @@ describe('Decoder', function () {
       ]);
   });
 
-  it.skip('should match returned series with selectors');
-  it.skip('should decode label from alias');
+  it('should match returned series with selectors', function () {
+    var query = new Query()
+          .from('my-org')
+          .select(['base', 'cpu'])
+          .select(['base', 'load_5min']),
+        decoded = data({s: 1472738400,
+                        d: [{
+                          n: '0',
+                          r: 1000,
+                          v: [5, 6, 7]
+                        },{
+                          n: '0',
+                          r: 1000,
+                          v: [8, 9, 10]
+                        },{
+                          n: '1',
+                          r: 1000,
+                          v: [0.1, 0.2, 0.3]
+                        }]})
+          .commingFromQuery(query)
+          .afterDecoding();
+    
+    expect(decoded).to.have.deep.property('series[0].qpart', query.parts[0]);
+    expect(decoded).to.have.deep.property('series[1].qpart', query.parts[0]);
+    expect(decoded).to.have.deep.property('series[2].qpart', query.parts[1]);
+  });
+
+  it('should match label from queried part', function() {
+    expect(
+      data({s: 1472738400,
+            d: [{
+              n: '0',
+              r: 1000,
+              v: [5, 6, 7]}]})
+        .commingFromQuery(new Query().from('my-org')
+                          .select(['base', 'cpu'])
+                          .labelBy('Cpu usage'))
+        .afterDecoding()
+    ).to.have
+      .deep.property('series[0].name', 'Cpu usage');
+  });
+
+  it('Shoudl fall-back to selector as label', function () {
+    expect(
+      data({s: 1472738400,
+            d: [{
+              n: '0',
+              r: 1000,
+              v: [5, 6, 7]}]})
+        .commingFromQuery(new Query().from('my-org')
+                          .select(['base', 'cpu']))
+        .afterDecoding()
+    ).to.have
+      .deep.property('series[0].name', "'base'.'cpu' FROM 'my-org'");
+  });
+  
+  // n of a series is like: '0'.'c3bcee12-0680-4bf3-8237-f51b48330dd8'.'toms-mac'
   it.skip('should decode tags from annotated data');
+  it.skip('Should decode escaped characters in annotated data');
   it.skip('should combine and apply confidence if such option was present');
 });

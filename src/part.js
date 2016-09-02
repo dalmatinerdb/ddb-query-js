@@ -19,9 +19,9 @@ export default class Part {
     return part;
   }
 
-  aliasBy(label) {
+  labelBy(label) {
     var part = this._clone(),
-        alias = new Alias(label);
+        alias = part.alias ? part.alias.useLabel(label) : new Alias(label);
     part.alias = alias;
     return part;
   }

@@ -181,7 +181,7 @@ describe('Query', function() {
 
   });
 
-  describe('#aliasBy', function() {
+  describe.skip('#aliasBy', function() {
 
     it('should alias simple selectors with from statement', function() {
       expect(
@@ -260,10 +260,10 @@ describe('Query', function() {
         query.from('first-org')
         .select(['base', 'cpu', 'system'])
         .shiftBy('1h')
-        .aliasBy('$1')
+        .annotateWith(['', 'region'])
         .toString()
       ).to.be
-        .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org' SHIFT BY 1h AS $1");
+        .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org' SHIFT BY 1h AS $'region'");
     });
   });
 

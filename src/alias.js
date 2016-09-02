@@ -5,6 +5,12 @@ export default class Alias {
     this.tags = [];
   }
 
+  useLabel(label) {
+    var alias = this._clone();
+    alias.label = label;
+    return alias;
+  }
+  
   prefixWith(prefix) {
     var alias = this._clone();
     alias.prefix = prefix;

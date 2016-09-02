@@ -11,15 +11,24 @@ export default class Decoder {
 
 function decode(query, resp, options = {}) {
   var {s, t, d} = resp,
-      //parts = query.parts,
+      parts = query ? query.parts : [],
       start = moment(s * 1000),
       series = [];
 
   series = Array.prototype.map.call(d, function({n, r, v}) {
-    return {
-      name: n,
-      points: decodePoints(v, start.valueOf(), r)
-    };
+    var sections = decodeN(n),
+        idx = parseInt(sections[0]),
+        qpart = parts[idx],
+        name;
+
+    if (qpart.alias && qpart.alias.label) {
+      name = qpart.alias.label;
+    } else {
+      name = qpart.selector.toString();
+    }
+
+    return {qpart, name,
+            points: decodePoints(v, start.valueOf(), r)};
   });
   return {start, series};
 }
@@ -31,4 +40,17 @@ function decodePoints(values, start, increment) {
     r[i] = [values[i], start + (i * increment)];
   }
   return r;
+}
+
+
+function decodeN(n) {
+  return n.split('.').map(decodeNSection);
+}
+
+
+function decodeNSection(section) {
+  if (section[0] == "'" && section[section.length - 1] == "'") {
+    section = section.slice(1, -1);
+  }
+  return section;
 }

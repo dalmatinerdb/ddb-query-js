@@ -1,6 +1,9 @@
 export default class Selector {
 
   constructor(collection, metric) {
+    if (! Array.isArray(metric)) {
+      throw new Error(`Expected metric to be an Array, got '${metric}' instead`);
+    }
     this.collection = collection;
     this.metric = metric.map(function (mpart) {
       return mpart.value ? mpart.value : mpart.toString();

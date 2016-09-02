@@ -9,7 +9,7 @@ const PART_METHODS = [
   'where',
   'apply',
   'shiftBy',
-  'aliasBy',
+  'labelBy',
   'annotateWith'
 ];
 
@@ -87,10 +87,10 @@ export default class Query {
   }
 
   exec(ajax, options = {}) {
-    var decoder = new Decoder(this, options),
-        settings = {data: {}},
+    var settings = {data: {}},
         query = this._clone(),
-        parts = query.parts;
+        parts = query.parts,
+        decoder = null;
 
     if (! ajax)
       throw new Error("Missing ajax function");
@@ -107,6 +107,7 @@ export default class Query {
       }, []);
     }
     query.parts = parts;
+    decoder = new Decoder(query, options),
     settings.data.q = query.toString();
     
     if (! options.url)
