@@ -175,5 +175,118 @@ describe('Decoder', function () {
       .that.is.deep.equal({'note': "Don't mind quotes! (Even with second ')"});
   });
 
-  it.skip('should combine and apply confidence if such option was present');
+  it('should combine and apply confidence if such option was present', function () {
+    expect(
+      data(
+        {s: 1472738400,
+         d: [{
+           n: "'0'.'v'",
+           r: 1000,
+           v: [5, 5, 7, 7, 9, 9]
+         },{
+           n: "'0'.'c'",
+           r: 1000,
+           v: [1, 0, 1, 0, 1, 0]
+         }]})
+        .commingFromQuery(new Query().from('my-org')
+                          .select(['base', 'cpu']))
+        .withOptions({applyConfidence: true})
+        .afterDecoding()
+    ).to.have
+      .deep.property('series[0].points')
+      .that.is.deep.equal([
+        [5, 1472738400000],
+        [7, 1472738402000],
+        [9, 1472738404000]
+      ]);
+  });
+
+  it('should match confidence based on meta-data when available', function () {
+    var decoded =
+          data(
+            {s: 1472738400,
+             d: [{
+               n: "'0'.'v'.'mac-1'",
+               r: 1000,
+               v: [5, 6, 7, 8, 9, 10]
+             },{
+               n: "'0'.'c'.'mac-2'",
+               r: 1000,
+               v: [0, 1, 0, 1, 0, 1]
+             },{
+               n: "'0'.'c'.'mac-1'",
+               r: 1000,
+               v: [1, 0, 1, 0, 1, 0]
+             },{
+               n: "'0'.'v'.'mac-2'",
+               r: 1000,
+               v: [1, 2, 3, 4, 5, 6]
+             }]})
+          .commingFromQuery(new Query().from('my-org')
+                            .select(['base', 'cpu'])
+                            .annotateWith('host'))
+          .withOptions({applyConfidence: true})
+          .afterDecoding();
+    
+    expect(decoded).to.have
+      .deep.property('series[0].points')
+      .that.is.deep.equal([
+        [5, 1472738400000],
+        [7, 1472738402000],
+        [9, 1472738404000]
+      ]);
+
+    expect(decoded).to.have
+      .deep.property('series[1].points')
+      .that.is.deep.equal([
+        [2, 1472738401000],
+        [4, 1472738403000],
+        [6, 1472738405000]
+      ]);
+  });
+
+  it('should match confidence based on ordering if meta-data is not available', function () {
+    var decoded =
+          data(
+            {s: 1472738400,
+             d: [{
+               n: "'0'.'v'",
+               r: 1000,
+               v: [5, 6, 7, 8, 9, 10]
+             },{
+               n: "'0'.'c'",
+               r: 1000,
+               v: [0, 1, 0, 1, 0, 1]
+             },{
+               n: "'0'.'c'",
+               r: 1000,
+               v: [1, 0, 1, 0, 1, 0]
+             },{
+               n: "'0'.'v'",
+               r: 1000,
+               v: [1, 2, 3, 4, 5, 6]
+             }]})
+          .commingFromQuery(new Query().from('my-org')
+                            .select(['base', 'cpu'])
+                            .annotateWith('host'))
+          .withOptions({applyConfidence: true})
+          .afterDecoding();
+    
+    expect(decoded).to.have
+      .deep.property('series[0].points')
+      .that.is.deep.equal([
+        [6, 1472738401000],
+        [8, 1472738403000],
+        [10, 1472738405000]
+      ]);
+
+    expect(decoded).to.have
+      .deep.property('series[1].points')
+      .that.is.deep.equal([
+        [1, 1472738400000],
+        [3, 1472738402000],
+        [5, 1472738404000]
+      ]);
+  });
+
 });
