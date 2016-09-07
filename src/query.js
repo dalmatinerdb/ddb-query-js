@@ -102,7 +102,8 @@ export default class Query {
       parts = parts.reduce(function(acc, part) {
         let prefix = part.alias.prefix,
             vpart = part.prefixWith(prefix.concat('v')),
-            cpart = part.prefixWith(prefix.concat('c'));
+            cpart = part.prefixWith(prefix.concat('c'))
+              .apply('confidence');
         return acc.concat(vpart, cpart);
       }, []);
     }

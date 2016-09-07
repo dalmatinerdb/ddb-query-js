@@ -323,7 +323,7 @@ describe('Query', function() {
           {data:
            {q: "SELECT " +
             "avg('base'.'cpu' FROM 'some-org', 10s) AS '0'.'v'.$dl:'hostname', " +
-            "avg('base'.'cpu' FROM 'some-org', 10s) AS '0'.'c'.$dl:'hostname' " +
+            "confidence(avg('base'.'cpu' FROM 'some-org', 10s)) AS '0'.'c'.$dl:'hostname' " +
             "LAST 600s"
            }}));
     });
