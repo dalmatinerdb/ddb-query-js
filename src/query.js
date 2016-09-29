@@ -14,6 +14,30 @@ const PART_METHODS = [
 ];
 
 
+class AbortablePromise {
+
+  constructor(promise, abort) {
+    this.promise = promise;
+    if (abort) {
+      this.abort = abort;
+    } else if (promise.abort) {
+      this.abort = promise.abort.bind(promise);
+    } else {
+      throw new Error("Tried to initialise abort-able promise without abort handler"); 
+    }
+  }
+
+  then(onFulfilled, onRejected) {
+    return new AbortablePromise(this.promise.then(onFulfilled, onRejected),
+                                this.abort);
+  }
+
+  catch(onRejected) {
+    return new AbortablePromise(this.promise.catch(onRejected), this.abort);
+  }
+}
+
+
 /**
  * DalmatinerDB Query builder.
  *
@@ -123,7 +147,7 @@ export default class Query {
     }
 
     Object.assign(settings, options);
-    return ajax(settings)
+    return new AbortablePromise(ajax(settings))
       .then(decoder.decode);
   }
 

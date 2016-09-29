@@ -287,7 +287,8 @@ describe('Query', function() {
 
     beforeEach(function() {
       xhr_mock = {
-        then: sinon.spy()
+        then: sinon.spy(),
+        abort: sinon.spy()
       },
       ajax = sinon.stub()
         .returns(xhr_mock);
