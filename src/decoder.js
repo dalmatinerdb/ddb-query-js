@@ -1,6 +1,16 @@
 import moment from "moment";
 
 
+function overlayConfidence(v1, v2) {
+  if (v1.length != v2.length) {
+    throw new Error('All arrays must be the same length');
+  }
+  for (let i = 0; i < v1.length; i++) {
+    v1[i] = v1[i] === void 0 ? v2[i] : Math.max(v1[i], v2[i]);
+  }
+}
+
+
 export default class Decoder {
 
   constructor(query, options) {
@@ -15,6 +25,7 @@ function decode(query, resp, options = {}) {
       start = moment(s * 1000),
       //matched = new Array(parts.length),
       matched = {},
+      confidenceOverlay,
       series;
 
   // First pass is to decode name and eventually match values and confidence channels
@@ -47,6 +58,14 @@ function decode(query, resp, options = {}) {
       if (matched[key].r != r)
         throw new Error("Values and confidence data came in different resolution");
     }
+
+    if (options.applyConfidence == 'aligned' && channel === 'c') {
+      if (! confidenceOverlay)
+        confidenceOverlay = new Array(v.length);
+      overlayConfidence(confidenceOverlay, v);
+      v = confidenceOverlay;
+    }
+
     matched[key][channel] = v;
   }, []);
 

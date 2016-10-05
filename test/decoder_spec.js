@@ -289,4 +289,40 @@ describe('Decoder', function () {
       ]);
   });
 
+  it('should match confidence and leave interpolated points if data is to be aligned', function () {
+    var decoded =
+          data(
+            {s: 1472738400,
+             d: [{
+               n: "'0'.'v'.'mac-1'",
+               r: 1000,
+               v: [5, 6, 7, 8, 9]
+             },{
+               n: "'0'.'c'.'mac-1'",
+               r: 1000,
+               v: [0, 1, 0, 1, 0]
+             },{
+               n: "'0'.'v'.'mac-2'",
+               r: 1000,
+               v: [1, 2, 3, 4, 5]
+             },{
+               n: "'0'.'c'.'mac-2'",
+               r: 1000,
+               v: [0, 0, 1, 0, 0]
+             }]})
+          .commingFromQuery(new Query().from('my-org')
+                            .select(['base', 'cpu'])
+                            .annotateWith('host'))
+          .withOptions({applyConfidence: 'aligned'})
+          .afterDecoding();
+
+    expect(decoded).to.have
+      .deep.property('series[0].points')
+      .that.is.deep.equal([
+        [6, 1472738401000],
+        [7, 1472738402000],
+        [8, 1472738403000]
+      ]);
+  });
+
 });
