@@ -50,19 +50,6 @@ export default class Query {
     this.vars = {};
   }
 
-  // TODO: maybe this statics should end up on main index level
-  static equals(a, b) {
-    return new Condition('eq', a, b);
-  }
-
-  static notEquals(a, b) {
-    return new Condition('neq', a, b);
-  }
-
-  static present(a) {
-    return new Condition('present', a);
-  }
-
   /**
    * Chain-able query generators
    *

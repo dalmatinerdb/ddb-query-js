@@ -5,9 +5,11 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import source_map from 'source-map-support';
 import Query from "./query";
+import * as api from "./index";
 
 source_map.install({handleUncaughtExceptions: false});
 chai.use(sinonChai);
+
 
 describe('Query', function() {
   var expect = chai.expect,
@@ -15,65 +17,6 @@ describe('Query', function() {
 
   beforeEach(function() {
     query = new Query();
-  });
-
-  describe('#equals', function() {
-
-    it('should build a condition with name-space', function() {
-      var c = Query.equals(['dl', 'source'], 'agent1');
-      expect('' + c).to.be.equal("dl:'source' = 'agent1'");
-    });
-
-    it('should build a condition without name-space', function() {
-      var c = Query.equals(['', 'custom'], 'some-value');
-      expect('' + c).to.be.equal("'custom' = 'some-value'");
-    });
-
-    it('should build a condition that can be and-ed', function() {
-      var c = Query.equals(['label', 'production'], '')
-            .and(Query.equals(['label', 'web'], ''));
-      expect('' + c).to.be.equal("label:'production' = '' AND label:'web' = ''");
-    });
-
-    it('should build a condition that can be or-ed', function() {
-      var c = Query.equals(['label', 'production'], '')
-            .or(Query.equals(['label', 'web'], ''));
-      expect('' + c).to.be.equal("label:'production' = '' OR label:'web' = ''");
-    });
-  });
-
-  describe('#not-equals', function() {
-
-    it('should build a condition with name-space', function() {
-      var c = Query.notEquals(['dl', 'source'], 'agent1');
-      expect('' + c).to.be.equal("dl:'source' != 'agent1'");
-    });
-
-    it('should build a condition without name-space', function() {
-      var c = Query.notEquals(['', 'custom'], 'some-value');
-      expect('' + c).to.be.equal("'custom' != 'some-value'");
-    });
-
-    it('should build a condition that can be and-ed', function() {
-      var c = Query.notEquals(['label', 'production'], '')
-            .and(Query.notEquals(['label', 'web'], ''));
-      expect('' + c).to.be.equal("label:'production' != '' AND label:'web' != ''");
-    });
-
-    it('should build a condition that can be or-ed', function() {
-      var c = Query.notEquals(['label', 'production'], '')
-            .or(Query.notEquals(['label', 'web'], ''));
-      expect('' + c).to.be.equal("label:'production' != '' OR label:'web' != ''");
-    });
-  });
-
-
-  describe('#present', function() {
-
-    it('should build a condition checking presence of a tag', function() {
-      var c = Query.present(['label', 'production']);
-      expect('' + c).to.be.equal("label:'production'");
-    });
   });
 
   describe('#select', function() {
@@ -107,7 +50,30 @@ describe('Query', function() {
       ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org', 'base'.'cpu'.'user' FROM 'second-org'");
     });
+  });
 
+  describe('#where', function() {
+
+    it('should add where clause to selector', function() {
+      expect(
+        query.from('my-org')
+          .select(['base', 'cpu'])
+          .where(api.equals(['dl', 'source'], 'my-agent'))
+          .toString()
+      ).to.be
+        .equal("SELECT 'base'.'cpu' FROM 'my-org' WHERE dl:'source' = 'my-agent'");
+    });
+
+    it('should add where clauses inside function call', function() {
+      expect(
+        query.from('my-org')
+          .select(['base', 'cpu'])
+          .apply('derivate')
+          .where(api.equals(['dl', 'source'], 'my-agent'))
+          .toString()
+      ).to.be
+        .equal("SELECT derivate('base'.'cpu' FROM 'my-org' WHERE dl:'source' = 'my-agent')");
+    });
   });
 
   describe('#apply', function() {
@@ -181,37 +147,37 @@ describe('Query', function() {
 
   });
 
-  describe.skip('#aliasBy', function() {
+  describe('#labelBy', function() {
 
-    it('should alias simple selectors with from statement', function() {
+    it('should label simple selectors with from statement', function() {
       expect(
         query.from('myorg')
         .select(['base', 'cpu', 'system'])
-        .aliasBy('$1')
+        .labelBy('$1')
         .toString()
       ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'myorg' AS $1");
     });
 
-    it('should alias chained functions', function() {
+    it('should label chained functions', function() {
       expect(
         query.from('myorg')
         .select(['base', 'network', 'eth0', 'sent'])
         .apply('derivate')
         .apply('sum', ['30s'])
-        .aliasBy('$1')
+        .labelBy('$1')
         .toString()
       ).to.be
         .equal("SELECT sum(derivate('base'.'network'.'eth0'.'sent' FROM 'myorg'), 30s) AS $1");
     });
 
-    it('should only alias selector for most recent collection', function() {
+    it('should only label selector for most recent collection', function() {
       expect(
         query.from('first-org')
         .select(['base', 'cpu', 'system'])
         .from('second-org')
         .select(['base', 'cpu', 'user'])
-        .aliasBy('$1')
+        .labelBy('$1')
         .toString()
       ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org', 'base'.'cpu'.'user' FROM 'second-org' AS $1");

@@ -1,5 +1,4 @@
 import Selector from "./selector.js";
-import Condition from "./condition.js";
 import Alias from "./alias.js";
 import Timeshift from "./timeshift.js";
 import Function from "./function.js";
@@ -12,10 +11,9 @@ export default class Part {
   }
 
   where(condition) {
-    if (! condition instanceof Condition)
-      throw new Error("Invalid query condition");
-    var part = this._clone();
-    part.condition = condition;
+    var part = this._clone(),
+        selector = this.selector.where(condition);
+    part.selector = selector;
     return part;
   }
 
@@ -35,7 +33,7 @@ export default class Part {
 
   apply(fun, args = []) {
     var part = this._clone(),
-        fargs = [this._getSelector()].concat(args),
+        fargs = [this.fn || '$__selector'].concat(args),
         fn = new Function(fun, fargs);
     part.fn = fn;
     return part;
@@ -56,13 +54,13 @@ export default class Part {
   }
 
   toString(vars) {
-    var str = this._getSelector().toString(vars);
-    if (this.condition)
-      str += ` WHERE ${this.condition}`;
-    for (let stmt of ['timeshift', 'alias'])
-      if (this[stmt]) {
-        str += ' ' + this[stmt].toString();
-      }
+    var str = '' + this.selector;
+    if (this.fn) {
+      vars = {...vars, '__selector': this.selector};
+      str = this.fn.toString(vars);
+    }
+    for (let stmt of this._getOuterStatements())
+      str += ' ' + stmt.toString();
     return str;
   }
 
@@ -73,14 +71,17 @@ export default class Part {
   _clone() {
     var part = Object.create(Part.prototype);
     part.selector = this.selector;
-    if (this.condition) part.condition = this.condition;
     if (this.alias) part.alias = this.alias;
     if (this.timeshift) part.timeshift = this.timeshift;
     if (this.fn) part.fn = this.fn;
     return part;
   }
 
-  _getSelector() {
-    return this.fn || this.selector;
+  _getOuterStatements() {
+    var statements = [];
+    for (let name of ['timeshift', 'alias'])
+      if (this[name])
+        statements.push(this[name]);
+    return statements;
   }
 }
