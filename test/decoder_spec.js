@@ -325,4 +325,37 @@ describe('Decoder', function () {
       ]);
   });
 
+  it('it should match query part even for queries with confidence mapping ', function () {
+    var decoded =
+          data(
+            {s: 1472738400,
+             d: [{
+               n: "'0'.'v'",
+               r: 1000,
+               v: [5, 6, 7, 8, 9]
+             },{
+               n: "'0'.'c'",
+               r: 1000,
+               v: [0, 1, 0, 1, 0]
+             },{
+               n: "'1'.'v'",
+               r: 1000,
+               v: [1, 2, 3, 4, 5]
+             },{
+               n: "'1'.'c'",
+               r: 1000,
+               v: [0, 1, 0, 1, 0]
+             }]})
+          .commingFromQuery(new Query().from('my-org')
+                            .select(['base', 'cpu', 'user'])
+                            .select(['base', 'cpu', 'user']).apply('confidence')
+                            .select(['base', 'cpu', 'system'])
+                            .select(['base', 'cpu', 'system']).apply('confidence'))
+          .withOptions({applyConfidence: true})
+          .afterDecoding();
+
+    expect(decoded).to.have
+      .deep.property('series[1].qpart.selector.metric')
+      .that.is.deep.equal(['base', 'cpu', 'system']);
+  });
 });

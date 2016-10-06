@@ -1,6 +1,6 @@
 {
   "name": "dalmatinerdb-query",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "DalmatinerDB query builder",
   "main": "lib/index.js",
   "scripts": {

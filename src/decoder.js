@@ -37,8 +37,10 @@ function decode(query, resp, options = {}) {
         keyPrefix,
         key;
 
-    if (options.applyConfidence)
+    if (options.applyConfidence) {
       channel = sections.shift();
+      idx *= 2; // Because confidence duplicated number of parts in a query
+    }
 
     // Confidence and value channels are matched on combination of query index and
     // extra meta-data sections. On top of that we add increment, so we can match
