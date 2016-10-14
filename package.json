@@ -1,7 +1,7 @@
 {
-  "name": "dalmatinerdb-query",
+  "name": "ddb-query",
   "version": "0.2.4",
-  "description": "DalmatinerDB query builder",
+  "description": "DalmatinerDB query builder and response decoder.",
   "main": "lib/index.js",
   "scripts": {
     "prepublish": "grunt test build",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dalmatinerdb/dalmatinerdb-query.git"
+    "url": "git+https://github.com/dalmatinerdb/ddb-query-js.git"
   },
   "keywords": [
     "dalmatinerdb"
@@ -17,9 +17,9 @@
   "author": "Tomasz Szarstuk <szarsti@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dalmatinerdb/dalmatinerdb-query/issues"
+    "url": "https://github.com/dalmatinerdb/ddb-query-js/issues"
   },
-  "homepage": "https://github.com/dalmatinerdb/dalmatinerdb-query#readme",
+  "homepage": "https://github.com/dalmatinerdb/ddb-query-js#readme",
   "devDependencies": {
     "babel": "^6.5.2",
     "babel-plugin-transform-es2015-for-of": "^6.8.0",
