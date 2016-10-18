@@ -74,6 +74,10 @@ export default class Query {
     return query;
   }
 
+  selectAll() {
+    return this.select('All');
+  }
+
   beginningAt(t) {
     var query = this._clone();
     query.beginning = moment(t);

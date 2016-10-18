@@ -50,6 +50,15 @@ describe('Query', function() {
       ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org', 'base'.'cpu'.'user' FROM 'second-org'");
     });
+
+    it('should allow for ALL selector', function() {
+      expect(
+        query.from('myorg')
+          .selectAll()
+        .toString()
+      ).to.be
+        .equal("SELECT ALL FROM 'myorg'");
+    });
   });
 
   describe('#where', function() {

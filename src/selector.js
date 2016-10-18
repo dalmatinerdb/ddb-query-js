@@ -1,15 +1,26 @@
 import Condition from "./condition.js";
 
+const ALL = {
+  toString: function() {
+    return 'ALL';
+  }
+};
+
+
 export default class Selector {
 
   constructor(collection, metric, condition) {
-    if (! Array.isArray(metric)) {
+    if (Array.isArray(metric)) {
+      metric = metric.map(function (mpart) {
+        return mpart.value ? mpart.value : mpart.toString();
+      });
+    } else if (typeof metric == 'string' && metric.toUpperCase() == 'ALL') {
+      metric = [ALL];
+    } else {
       throw new Error(`Expected metric to be an Array, got '${metric}' instead`);
     }
     this.collection = collection;
-    this.metric = metric.map(function (mpart) {
-      return mpart.value ? mpart.value : mpart.toString();
-    });
+    this.metric = metric;
     this.condition = condition;
   }
 
@@ -38,7 +49,7 @@ export default class Selector {
 
   _encodeMetric() {
     return this.metric.map(function(part) {
-      if (part === '*')
+      if (part === '*' || part === ALL)
         return `${part}`;
       else
         return `'${part}'`;
