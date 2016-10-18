@@ -306,7 +306,7 @@ describe('Query', function() {
       expect(ajax).to.have.been.calledWith({
         url: 'http://localhost:8080',
         data: {
-          q: "SELECT 'base'.'cpu' FROM 'some-org' AS '0' LAST 600s"
+          q: encodeURIComponent("SELECT 'base'.'cpu' FROM 'some-org' AS '0' LAST 600s")
         },
         headers: {
           accept: 'application/json'
@@ -325,10 +325,10 @@ describe('Query', function() {
       expect(ajax).to.have.been
         .calledWith(sinon.match(
           {data:
-           {q: "SELECT " +
+           {q: encodeURIComponent("SELECT " +
             "avg('base'.'cpu' FROM 'some-org', 10s) AS '0'.'v'.$dl:'hostname', " +
             "confidence(avg('base'.'cpu' FROM 'some-org', 10s)) AS '0'.'c'.$dl:'hostname' " +
-            "LAST 600s"
+            "LAST 600s")
            }}));
     });
   });

@@ -75,7 +75,7 @@ export default class Query {
   }
 
   selectAll() {
-    return this.select('All');
+    return this.select('ALL');
   }
 
   beginningAt(t) {
@@ -126,7 +126,7 @@ export default class Query {
     }
     query.parts = parts;
     decoder = new Decoder(query, options),
-    settings.data.q = query.toString();
+    settings.data.q = encodeURIComponent(query.toString());
     
     if (! options.url)
       settings.url = 'http://localhost:8080'; // Default url

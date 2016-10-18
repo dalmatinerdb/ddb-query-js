@@ -7,11 +7,16 @@ const ALL = {
 };
 
 
+function isKeyword(part) {
+  return part === ALL;
+}
+
 export default class Selector {
 
   constructor(collection, metric, condition) {
     if (Array.isArray(metric)) {
       metric = metric.map(function (mpart) {
+        if (isKeyword(mpart)) return mpart;
         return mpart.value ? mpart.value : mpart.toString();
       });
     } else if (typeof metric == 'string' && metric.toUpperCase() == 'ALL') {
@@ -49,8 +54,8 @@ export default class Selector {
 
   _encodeMetric() {
     return this.metric.map(function(part) {
-      if (part === '*' || part === ALL)
-        return `${part}`;
+      if (isKeyword(part))
+        return part;
       else
         return `'${part}'`;
     }).join('.');
