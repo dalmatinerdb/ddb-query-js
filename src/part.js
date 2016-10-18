@@ -10,11 +10,19 @@ export default class Part {
     this.selector = new Selector(collection, metric);
   }
 
-  where(condition) {
+  where(condition, operator) {
     var part = this._clone(),
-        selector = this.selector.where(condition);
+        selector = this.selector.where(condition, operator);
     part.selector = selector;
     return part;
+  }
+
+  andWhere(condition) {
+    return this.where(condition, 'and');
+  }
+
+  orWhere(condition) {
+    return this.where(condition, 'or');
   }
 
   labelBy(label) {

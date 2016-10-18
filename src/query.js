@@ -7,6 +7,8 @@ import Decoder from "./decoder.js";
 // Part methods that are exposed to Query top level api
 const PART_METHODS = [
   'where',
+  'andWhere',
+  'orWhere',
   'apply',
   'shiftBy',
   'labelBy',

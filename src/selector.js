@@ -13,9 +13,12 @@ export default class Selector {
     this.condition = condition;
   }
 
-  where(condition) {
+  where(condition, operator) {
     if (! condition instanceof Condition)
       throw new Error("Invalid query condition");
+    if (operator && this.condition) {
+      condition = this.condition[operator](condition);
+    }
     var selector = new Selector(this.collection, this.metric, condition);
     return selector;
   }

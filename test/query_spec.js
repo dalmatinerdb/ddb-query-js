@@ -76,6 +76,34 @@ describe('Query', function() {
     });
   });
 
+  describe('#andWhere', function() {
+
+    it('should combine condition with existing one using and operator', function() {
+      expect(
+        query.from('my-org')
+          .select(['base', 'cpu'])
+          .where(api.present(['label', 'prod']))
+          .andWhere(api.present(['label', 'web']))
+          .toString()
+      ).to.be
+        .equal("SELECT 'base'.'cpu' FROM 'my-org' WHERE label:'prod' AND label:'web'");
+    });
+  });
+
+  describe('#orWhere', function() {
+
+    it('should combine condition with existing one using and operator', function() {
+      expect(
+        query.from('my-org')
+          .select(['base', 'cpu'])
+          .where(api.equals(['dl', 'source'], 'first-agent'))
+          .orWhere(api.equals(['dl', 'source'], 'second-agent'))
+          .toString()
+      ).to.be
+        .equal("SELECT 'base'.'cpu' FROM 'my-org' WHERE dl:'source' = 'first-agent' OR dl:'source' = 'second-agent'");
+    });
+  });
+
   describe('#apply', function() {
 
     it('should apply function on active selection', function() {
