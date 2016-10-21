@@ -126,7 +126,7 @@ export default class Query {
     }
     query.parts = parts;
     decoder = new Decoder(query, options),
-    settings.data.q = encodeURIComponent(query.toString());
+    settings.data.q = query.toString();
     
     if (! options.url)
       settings.url = 'http://localhost:8080'; // Default url
