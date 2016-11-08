@@ -182,6 +182,55 @@ describe('Query', function() {
       );
     });
 
+    it('should allow nesting query parts as arguments', function() {
+      var q = query.from('myorg');
+      var partA = q
+          .select(['base', 'cpu', 'system'])
+          .apply('avg', ['30s'])
+          .lastPart();
+      var partB = q
+          .select(['base', 'cpu', 'idle'])
+          .apply('avg', ['30s'])
+          .lastPart();
+
+      expect(
+        q.select(['base', 'cpu', 'user'])
+          .apply('avg', ['30s'])
+          .apply('sum', [partA, partB])
+          .toString()
+      ).to.be.equal(
+        "SELECT sum(" +
+          "avg('base'.'cpu'.'user' FROM 'myorg', 30s), " +
+          "avg('base'.'cpu'.'system' FROM 'myorg', 30s), " +
+          "avg('base'.'cpu'.'idle' FROM 'myorg', 30s))"
+      );
+    });
+
+    it('should allow nesting query parts inside variables', function() {
+      var q = query.from('myorg');
+      var partA = q
+          .select(['base', 'cpu', 'system'])
+          .apply('avg', ['30s'])
+          .lastPart();
+      var partB = q
+          .select(['base', 'cpu', 'idle'])
+          .apply('avg', ['30s'])
+          .lastPart();
+
+      expect(
+        q.select(['base', 'cpu', 'user'])
+          .apply('avg', ['30s'])
+          .apply('sum', ['$A', '$B'])
+          .with('A', partA)
+          .with('B', partB)
+          .toString()
+      ).to.be.equal(
+        "SELECT sum(" +
+          "avg('base'.'cpu'.'user' FROM 'myorg', 30s), " +
+          "avg('base'.'cpu'.'system' FROM 'myorg', 30s), " +
+          "avg('base'.'cpu'.'idle' FROM 'myorg', 30s))"
+      );
+    });
   });
 
   describe('#labelBy', function() {

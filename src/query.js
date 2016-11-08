@@ -103,6 +103,10 @@ export default class Query {
     return this;
   }
 
+  /**
+   * Non chain-able utilities
+   */
+
   exec(ajax, options = {}) {
     var settings = {data: {}},
         query = this._clone(),
@@ -147,6 +151,11 @@ export default class Query {
   /**
    * Reading methods
    */
+
+  lastPart() {
+    var len = this.parts.length;
+    return this.parts[len - 1];
+  }
 
   toString() {
     var parts = this._encodeParts().join(', '),
