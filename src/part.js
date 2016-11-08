@@ -1,7 +1,15 @@
 import Selector from "./selector.js";
 import Alias from "./alias.js";
-import Timeshift from "./timeshift.js";
 import Function from "./function.js";
+
+
+// Selector methods that are exposed on part level
+const SELECTOR_METHODS = [
+  'where',
+  'andWhere',
+  'orWhere',
+  'shiftBy'
+];
 
 
 export default class Part {
@@ -10,40 +18,19 @@ export default class Part {
     this.selector = new Selector(collection, metric);
   }
 
-  where(condition, operator) {
-    var part = this._clone(),
-        selector = this.selector.where(condition, operator);
-    part.selector = selector;
-    return part;
-  }
-
-  andWhere(condition) {
-    return this.where(condition, 'and');
-  }
-
-  orWhere(condition) {
-    return this.where(condition, 'or');
-  }
-
-  labelBy(label) {
-    var part = this._clone(),
-        alias = part.alias ? part.alias.useLabel(label) : new Alias(label);
-    part.alias = alias;
-    return part;
-  }
-
-  shiftBy(offset) {
-    var part = this._clone(),
-        timeshift = new Timeshift(offset);
-    part.timeshift = timeshift;
-    return part;
-  }
-
   apply(fun, args = []) {
     var part = this._clone(),
         fargs = [this.fn || '$__selector'].concat(args),
         fn = new Function(fun, fargs);
     part.fn = fn;
+    return part;
+  }
+
+
+  labelBy(label) {
+    var part = this._clone(),
+        alias = part.alias ? part.alias.useLabel(label) : new Alias(label);
+    part.alias = alias;
     return part;
   }
 
@@ -67,8 +54,8 @@ export default class Part {
       vars = {...vars, '__selector': this.selector};
       str = this.fn.toString(vars);
     }
-    for (let stmt of this._getOuterStatements())
-      str += ' ' + stmt.toString();
+    if (this.alias)
+      str += ' ' + this.alias.toString();
     return str;
   }
 
@@ -80,16 +67,20 @@ export default class Part {
     var part = Object.create(Part.prototype);
     part.selector = this.selector;
     if (this.alias) part.alias = this.alias;
-    if (this.timeshift) part.timeshift = this.timeshift;
     if (this.fn) part.fn = this.fn;
     return part;
   }
 
-  _getOuterStatements() {
-    var statements = [];
-    for (let name of ['timeshift', 'alias'])
-      if (this[name])
-        statements.push(this[name]);
-    return statements;
+  _updateSelector(method, ...args) {
+    var selector = this.selector[method](...args);
+    this.selector = selector;
+    return this;
   }
 }
+
+
+SELECTOR_METHODS.forEach(function(method) {
+  Part.prototype[method] = function (...args) {
+    return this._updateSelector(method, ...args);
+  };
+});

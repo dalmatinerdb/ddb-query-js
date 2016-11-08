@@ -1,4 +1,6 @@
 import Condition from "./condition.js";
+import Timeshift from "./timeshift.js";
+
 
 const ALL = {
   toString: function() {
@@ -11,9 +13,10 @@ function isKeyword(part) {
   return part === ALL;
 }
 
+
 export default class Selector {
 
-  constructor(collection, metric, condition) {
+  constructor(collection, metric) {
     if (Array.isArray(metric)) {
       metric = metric.map(function (mpart) {
         if (isKeyword(mpart)) return mpart;
@@ -26,7 +29,6 @@ export default class Selector {
     }
     this.collection = collection;
     this.metric = metric;
-    this.condition = condition;
   }
 
   where(condition, operator) {
@@ -35,7 +37,23 @@ export default class Selector {
     if (operator && this.condition) {
       condition = this.condition[operator](condition);
     }
-    var selector = new Selector(this.collection, this.metric, condition);
+    var selector = this._clone();
+    selector.condition = condition;
+    return selector;
+  }
+
+  andWhere(condition) {
+    return this.where(condition, 'and');
+  }
+
+  orWhere(condition) {
+    return this.where(condition, 'or');
+  }
+
+  shiftBy(offset) {
+    var selector = this._clone(),
+        timeshift = new Timeshift(offset);
+    selector.timeshift = timeshift;
     return selector;
   }
 
@@ -45,7 +63,20 @@ export default class Selector {
         str = `${metric} FROM ${collection}`;
     if (this.condition)
       str += ' WHERE ' + this.condition;
+    if (this.timeshift)
+      str += ' ' +  this.timeshift.toString();
     return str;
+  }
+
+  /**
+   * Internal methods
+   */
+
+  _clone() {
+    var selector = new Selector(this.collection, this.metric);
+    if (this.condition) selector.condition = this.condition;
+    if (this.timeshift) selector.timeshift = this.timeshift;
+    return this;
   }
 
   _encodeCollection() {

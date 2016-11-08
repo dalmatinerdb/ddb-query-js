@@ -243,7 +243,7 @@ describe('Query', function() {
         .shiftBy('1h')
         .toString()
       ).to.be
-        .equal("SELECT sum(derivate('base'.'network'.'eth0'.'sent' FROM 'myorg'), 30s) SHIFT BY 1h");
+        .equal("SELECT sum(derivate('base'.'network'.'eth0'.'sent' FROM 'myorg' SHIFT BY 1h), 30s)");
     });
 
     it('should only timeshift selector for most recent collection', function() {
@@ -268,6 +268,27 @@ describe('Query', function() {
       ).to.be
         .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org' SHIFT BY 1h AS $'region'");
     });
+
+    it.skip('should concatenate query', function() {
+      var q1 = query
+          .from('first-org')
+          .select(['base', 'cpu', 'system']);
+      var q2 = query
+          .from('second-org')
+          .select(['base', 'cpu', 'user']);
+
+      //var part = _.last(q1.parts);
+      //part = part.andWhere().....;
+      //
+      //q3 = query.(part1, part2);
+      //q3.last(1, 'day').exec();
+
+      expect(
+        q1.concat(q2).toString()
+      ).to.be
+        .equal("SELECT 'base'.'cpu'.'system' FROM 'first-org' SHIFT BY 1h, 'base'.'cpu'.'user' FROM 'second-org'");
+    });
+
   });
 
   describe('#annotateWith', function() {
