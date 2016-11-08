@@ -3,6 +3,7 @@ import moment from "moment";
 import Condition from "./condition.js";
 import Part from "./part.js";
 import Decoder from "./decoder.js";
+import Serializer from "./serializer.js";
 
 // Part methods that are exposed to Query top level api
 const PART_METHODS = [
@@ -14,6 +15,14 @@ const PART_METHODS = [
   'labelBy',
   'annotateWith'
 ];
+
+
+const SCHEMA = {
+  proto: Query.proto,
+  ref: {
+    parts: [Part.__schema]
+  }
+};
 
 
 class AbortablePromise {
@@ -49,7 +58,6 @@ export default class Query {
 
   constructor() {
     this.parts = [];
-    this.vars = {};
   }
 
   /**
@@ -99,6 +107,7 @@ export default class Query {
   }
 
   with(name, value) {
+    if (! this.vars) this.vars = {};
     this.vars[name] = value;
     return this;
   }
@@ -166,6 +175,14 @@ export default class Query {
     return str;
   }
 
+  toJSON() {
+    return Serializer.toJSON(this, {except: ['vars']});
+  }
+
+  fromJSON(json) {
+    return Serializer.fromJSON(SCHEMA, json);
+  }
+
   /**
    * Internal methods
    */
@@ -220,7 +237,7 @@ export default class Query {
   }
 
   _encodeParts() {
-    var vars = this.vars;
+    var vars = this.vars || {};
     return this.parts.map(p => { return p.toString(vars); });
   }
 };
