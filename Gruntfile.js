@@ -22,6 +22,7 @@ module.exports = function(grunt) {
       dist: {
         options: {
           plugins: [
+            'transform-class-properties',
             'transform-es2015-modules-systemjs',
             'transform-es2015-for-of',
             ['transform-object-rest-spread', { "useBuiltIns": true }]]
@@ -36,7 +37,8 @@ module.exports = function(grunt) {
       },
       test: {
         options: {
-          plugins: ['transform-object-assign',
+          plugins: ['transform-class-properties',
+                    'transform-object-assign',
                     'transform-object-rest-spread']
         },
         files: [{

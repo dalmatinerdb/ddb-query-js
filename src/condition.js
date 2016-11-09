@@ -1,5 +1,18 @@
 export default class Condition {
 
+  static __schema = {
+    proto: Condition.prototype,
+    ref: {
+      args: [function(context) {
+        if (typeof context === 'object' &&
+            context.op !== void 0 &&
+            context.args !== void 0)
+          return Condition.__schema;
+        return null;
+      }]
+    }
+  };
+
   constructor (op, ...args) {
     this.op = op;
     this.args = args;

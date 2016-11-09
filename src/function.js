@@ -1,5 +1,18 @@
 export default class Function {
 
+  static __schema = {
+    proto: Function.prototype,
+    ref: {
+      args: [function(context) {
+        if (typeof context === 'object' &&
+            context.fun !== void 0 &&
+            context.args !== void 0)
+          return Function.__schema;
+        return null;
+      }]
+    }
+  };
+
   constructor(fun, args) {
     this.fun = fun;
     this.args = args;
@@ -9,7 +22,6 @@ export default class Function {
   toString(vars) {
     var args = this.args.map((a) => this._encodeArg(a, vars));
     return `${this.fun}(${args.join(', ')})`;
-    // TODO: pass throuh vars to children
   }
 
   _encodeArg(arg, vars) {

@@ -14,6 +14,15 @@ const SELECTOR_METHODS = [
 
 export default class Part {
 
+  static __schema = {
+    proto: Part.prototype,
+    ref: {
+      alias: Alias.__schema,
+      selector: Selector.__schema,
+      fn: Function.__schema
+    }
+  };
+
   constructor(collection, metric) {
     this.selector = new Selector(collection, metric);
   }

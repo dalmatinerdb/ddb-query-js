@@ -1,20 +1,24 @@
+import moment from "moment";
+
 
 function objToJSON(obj, options) {
-  var r = {},
+  var schema = Object.getPrototypeOf(obj).constructor.__schema,
+      r = {},
       n, j;
+
   for (n of Object.getOwnPropertyNames(obj)) {
-    if (options && options.except && options.except.indexOf(n) >= 0) {
-      console.log('Skipping:' + n);
+    if (schema && schema.ignore && schema.ignore.indexOf(n) >= 0) {
       continue;
     }
-    j = toJSON(obj[n]);
+    j = anyToJSON(obj[n]);
     if (j !== void 0)
       r[n] = j;
   }
   return r;
 }
 
-function toJSON (obj, options) {
+
+function anyToJSON (obj) {
   switch (typeof obj) {
   case 'number':
   case 'string':
@@ -22,35 +26,61 @@ function toJSON (obj, options) {
   case 'function':
     return undefined;
   case 'object':
+    if (obj === null)
+      return undefined;
+    if (typeof obj.toJSON === 'function')
+      return obj.toJSON();
     if (Array.isArray(obj))
-      return obj.map(toJSON);
-    return objToJSON(obj, options);
+      return obj.map(anyToJSON);
+    return objToJSON(obj);
   };
   return undefined;
 }
 
-function fromJSON (schema, json) {
+
+function objFromJSON (schema, json) {
   var proto = schema.proto,
       ref = schema.ref,
       obj = Object.create(proto),
       n, o;
+
   Object.assign(obj, json);
-  console.log('Building from:', proto);
-  console.log('Built:', obj);
 
   for (n of Object.getOwnPropertyNames(obj)) {
-    if (ref[n])
-      if (Array.isArray(ref[n]))
-        o = Array.prototype.map.call(json[n], fromJSON.bind(null, ref[n][0]));
-      else
-        o = fromJSON(ref[n], json[n]);
+    if (ref && ref[n])
+      o = objFromRefedJSON(ref[n], json[n]);
     else
       o = json[n];
     obj[n] = o;
   };
-  return json;
+  return obj;
+}
+
+// Ref can be a schema, an array of refs or a function returning ref, or a class
+// identifier
+function objFromRefedJSON(ref, json) {
+  if (! ref)
+    return json;
+
+  if (typeof ref === 'function')
+    return objFromRefedJSON(ref(json), json);
+
+  if (Array.isArray(ref))
+    return Array.prototype.map.call(json, objFromRefedJSON.bind(null, ref[0]));
+
+  if (ref === "moment")
+    return moment(json);
+
+  if (ref === "duration")
+    return moment.duration(json);
+
+  return objFromJSON(ref, json);
 }
 
 
-var Serializer = {toJSON, fromJSON};
+var Serializer = {
+  toJSON: objToJSON,
+  fromJSON: objFromJSON
+};
+
 export default Serializer;

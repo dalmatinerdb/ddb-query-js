@@ -17,14 +17,6 @@ const PART_METHODS = [
 ];
 
 
-const SCHEMA = {
-  proto: Query.proto,
-  ref: {
-    parts: [Part.__schema]
-  }
-};
-
-
 class AbortablePromise {
 
   constructor(promise, abort) {
@@ -55,6 +47,17 @@ class AbortablePromise {
  * It provides chainable api to programatically assemble dalmatiner queries
  */
 export default class Query {
+
+  static __schema = {
+    proto: Query.prototype,
+    ref: {
+      parts: [Part.__schema],
+      beginning: 'moment',
+      ending: 'moment',
+      duration: 'duration'
+    },
+    ignore: ['vars']
+  };
 
   constructor() {
     this.parts = [];
@@ -166,8 +169,8 @@ export default class Query {
     return this.parts[len - 1];
   }
 
-  toString() {
-    var parts = this._encodeParts().join(', '),
+  toString(vars) {
+    var parts = this._encodeParts(vars).join(', '),
         range = this._encodeRange(),
         str = 'SELECT ' + parts;
     if (range)
@@ -176,11 +179,7 @@ export default class Query {
   }
 
   toJSON() {
-    return Serializer.toJSON(this, {except: ['vars']});
-  }
-
-  fromJSON(json) {
-    return Serializer.fromJSON(SCHEMA, json);
+    return Serializer.toJSON(this);
   }
 
   /**
@@ -236,8 +235,9 @@ export default class Query {
     return '';
   }
 
-  _encodeParts() {
-    var vars = this.vars || {};
+  _encodeParts(vars) {
+    if (this.vars)
+      vars = Object.assign({}, this.vars, vars);
     return this.parts.map(p => { return p.toString(vars); });
   }
 };

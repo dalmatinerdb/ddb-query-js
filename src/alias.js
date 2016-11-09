@@ -1,5 +1,9 @@
 export default class Alias {
 
+  static __schema = {
+    proto: Alias.prototype
+  };
+
   constructor(label) {
     if (label !== void 0) this.label = label;
     this.tags = [];

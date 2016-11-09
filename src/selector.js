@@ -16,6 +16,14 @@ function isKeyword(part) {
 
 export default class Selector {
 
+  static __schema = {
+    proto: Selector.prototype,
+    ref: {
+      condition: Condition.__schema,
+      timeshift: Timeshift.__schema
+    }
+  };
+
   constructor(collection, metric) {
     if (Array.isArray(metric)) {
       metric = metric.map(function (mpart) {
