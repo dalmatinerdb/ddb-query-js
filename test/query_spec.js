@@ -231,6 +231,46 @@ describe('Query', function() {
           "avg('base'.'cpu'.'idle' FROM 'myorg', 30s))"
       );
     });
+
+    it('should handle recursive query variables evaluation', function() {
+      var q = query.from('myorg');
+      var partA = q
+          .select(['base', 'partA'])
+          .apply('avg', ['10s'])
+          .lastPart();
+
+      var partB = q
+          .select(['base', 'partB', 'idle'])
+          .apply('diff', ['$C'])
+          .lastPart();
+
+      var partC = q
+          .select(['base', 'partC', 'idle'])
+          .apply('avg', ['20s'])
+          .lastPart();
+
+      expect(
+        q
+          .with('A', partA)
+          .with('B', partB)
+          .with('C', partC)
+          .select(['base', 'cpu', 'user1'])
+          .apply('avg', ['30s'])
+          .apply('sum', ['$A', '$B'])
+          .select(['base', 'cpu', 'user2'])
+          .apply('avg', ['30s'])
+          .apply('sum', ['$C', '$B'])
+          .toString()
+      ).to.be
+        .equal("SELECT sum(" +
+               "avg('base'.'cpu'.'user1' FROM 'myorg', 30s), " +
+               "avg('base'.'partA' FROM 'myorg', 10s), " +
+               "diff('base'.'partB'.'idle' FROM 'myorg', avg('base'.'partC'.'idle' FROM 'myorg', 20s))" +
+               "), sum(" +
+               "avg('base'.'cpu'.'user2' FROM 'myorg', 30s), " +
+               "avg('base'.'partC'.'idle' FROM 'myorg', 20s), " +
+               "diff('base'.'partB'.'idle' FROM 'myorg', avg('base'.'partC'.'idle' FROM 'myorg', 20s)))");
+    });
   });
 
   describe('#labelBy', function() {

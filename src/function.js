@@ -28,9 +28,10 @@ export default class Function {
     if (typeof arg === 'string' && arg[0] === '$') {
       let varname = arg.slice(1);
       arg = vars[varname];
-      if (arg === void 0) {
+      if (arg === void 0)
         throw new Error(`Variable ${varname} was not declared`);
-      }
+      if (typeof arg.toString === 'function')
+        arg = arg.toString(vars);
     } else if (typeof arg === 'object' && typeof arg.toString == 'function') {
       arg = arg.toString(vars);
     }

@@ -7,7 +7,7 @@ import * as api from "./index";
 source_map.install({handleUncaughtExceptions: false});
 
 
-describe.only('Serializer', function() {
+describe('Serializer', function() {
   var expect = chai.expect,
       query = api.query;
 
