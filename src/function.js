@@ -29,7 +29,7 @@ export default class Function {
       let varname = arg.slice(1);
       arg = vars[varname];
       if (arg === void 0)
-        throw new Error(`Variable ${varname} was not declared`);
+        throw new Error(`Variable ${varname} is not declared`);
       if (typeof arg.toString === 'function')
         arg = arg.toString(vars);
     } else if (typeof arg === 'object' && typeof arg.toString == 'function') {

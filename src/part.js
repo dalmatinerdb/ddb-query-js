@@ -1,3 +1,4 @@
+import {clone} from "./utils.js";
 import Selector from "./selector.js";
 import Alias from "./alias.js";
 import Function from "./function.js";
@@ -28,32 +29,55 @@ export default class Part {
   }
 
   apply(fun, args = []) {
-    var part = this._clone(),
+    var part = clone(this),
         fargs = [this.fn || '$__selector'].concat(args),
         fn = new Function(fun, fargs);
     part.fn = fn;
     return part;
   }
 
+  nameBy(name) {
+    var part = clone(this);
+    part.name = name;
+    return part;
+  }
 
   labelBy(label) {
-    var part = this._clone(),
+    var part = clone(this),
         alias = part.alias ? part.alias.useLabel(label) : new Alias(label);
     part.alias = alias;
     return part;
   }
 
   prefixWith(prefix) {
-    var part = this._clone(),
+    var part = clone(this),
         alias = this.alias || new Alias();
     part.alias = alias.prefixWith(prefix);
     return part;
   }
 
   annotateWith(...tags) {
-    var part = this._clone(),
+    var part = clone(this),
         alias = this.alias || new Alias();
     part.alias = alias.annotateWith(...tags);
+    return part;
+  }
+
+  exclude() {
+    if (this.excluded)
+      return this;
+
+    var part = clone(this);
+    part.excluded = true;
+    return part;
+  }
+
+  include() {
+    if (! this.hasOwnProperty('excluded'))
+      return this;
+
+    var part = clone(this);
+    delete part.excluded;
     return part;
   }
 
@@ -71,14 +95,6 @@ export default class Part {
   /**
    * Internal methods
    */
-
-  _clone() {
-    var part = Object.create(Part.prototype);
-    part.selector = this.selector;
-    if (this.alias) part.alias = this.alias;
-    if (this.fn) part.fn = this.fn;
-    return part;
-  }
 
   _updateSelector(method, ...args) {
     var selector = this.selector[method](...args);

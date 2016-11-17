@@ -1,3 +1,4 @@
+import {clone} from "./utils.js";
 import Condition from "./condition.js";
 import Timeshift from "./timeshift.js";
 
@@ -45,7 +46,7 @@ export default class Selector {
     if (operator && this.condition) {
       condition = this.condition[operator](condition);
     }
-    var selector = this._clone();
+    var selector = clone(this);
     selector.condition = condition;
     return selector;
   }
@@ -59,7 +60,7 @@ export default class Selector {
   }
 
   shiftBy(offset) {
-    var selector = this._clone(),
+    var selector = clone(this),
         timeshift = new Timeshift(offset);
     selector.timeshift = timeshift;
     return selector;
@@ -79,13 +80,6 @@ export default class Selector {
   /**
    * Internal methods
    */
-
-  _clone() {
-    var selector = new Selector(this.collection, this.metric);
-    if (this.condition) selector.condition = this.condition;
-    if (this.timeshift) selector.timeshift = this.timeshift;
-    return this;
-  }
 
   _encodeCollection() {
     return `'${this.collection}'`;

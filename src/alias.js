@@ -1,3 +1,6 @@
+import {clone} from "./utils.js";
+
+
 export default class Alias {
 
   static __schema = {
@@ -10,19 +13,19 @@ export default class Alias {
   }
 
   useLabel(label) {
-    var alias = this._clone();
+    var alias = clone(this);
     alias.label = label;
     return alias;
   }
   
   prefixWith(prefix) {
-    var alias = this._clone();
+    var alias = clone(this);
     alias.prefix = prefix;
     return alias;
   }
 
   annotateWith(...tags) {
-    var alias = this._clone();
+    var alias = clone(this);
     tags = tags.map(normalizeTag);
     alias.tags = dedupTags(this.tags.concat(tags));
     return alias;
@@ -30,14 +33,6 @@ export default class Alias {
 
   toString() {
     return `AS ${this._encode()}`;
-  }
-
-  _clone() {
-    var alias = Object.create(Alias.prototype);
-    alias.tags = this.tags;
-    if (this.label) alias.label = this.label;
-    if (this.prefix) alias.prefix = this.prefix;
-    return alias;
   }
 
   _encode() {

@@ -273,6 +273,26 @@ describe('Query', function() {
     });
   });
 
+  describe('#nameBy', function() {
+
+    it('should allow naming parts that can be used in nested queries', function() {
+      expect(
+        query.from('myorg')
+          .select(['base', 'cpu', 'system'])
+          .nameBy('A')
+          .select(['base', 'cpu', 'idle'])
+          .nameBy('B')
+          .select(['base', 'cpu', 'user'])
+          .apply('sum', ['$A', '$B'])
+        .toString()
+      ).to.be
+        .equal("SELECT "+
+               "'base'.'cpu'.'system' FROM 'myorg', " +
+               "'base'.'cpu'.'idle' FROM 'myorg', " +
+               "sum('base'.'cpu'.'user' FROM 'myorg', 'base'.'cpu'.'system' FROM 'myorg', 'base'.'cpu'.'idle' FROM 'myorg')");
+    });
+  });
+
   describe('#labelBy', function() {
 
     it('should label simple selectors with from statement', function() {
@@ -442,4 +462,38 @@ describe('Query', function() {
            }}));
     });
   });
+
+  describe('#exclude', function() {
+
+    it('should skip excluded part when building query', function() {
+      expect(
+        query.from('myorg')
+          .select(['base', 'cpu', 'system'])
+          .exclude()
+          .select(['base', 'cpu', 'user'])
+        .toString()
+      ).to.be
+        .equal("SELECT 'base'.'cpu'.'user' FROM 'myorg'");
+    });
+
+    it('should exclude keep part in nested parts', function() {
+      expect(
+        query.from('myorg')
+          .select(['base', 'cpu', 'system'])
+          .nameBy('A')
+          .exclude()
+          .select(['base', 'cpu', 'idle'])
+          .nameBy('B')
+          .exclude()
+          .select(['base', 'cpu', 'user'])
+          .apply('sum', ['$A', '$B'])
+        .toString()
+      ).to.be
+        .equal("SELECT sum("+
+               "'base'.'cpu'.'user' FROM 'myorg', " +
+               "'base'.'cpu'.'system' FROM 'myorg', " +
+               "'base'.'cpu'.'idle' FROM 'myorg')");
+    });
+  });
+
 });

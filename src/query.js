@@ -1,5 +1,6 @@
 import moment from "moment";
 
+import {clone} from "./utils.js";
 import Condition from "./condition.js";
 import Part from "./part.js";
 import Decoder from "./decoder.js";
@@ -12,8 +13,11 @@ const PART_METHODS = [
   'orWhere',
   'apply',
   'shiftBy',
+  'nameBy',
   'labelBy',
-  'annotateWith'
+  'annotateWith',
+  'exclude',
+  'include'
 ];
 
 
@@ -69,7 +73,7 @@ export default class Query {
    * Each one of them will generate new query
    */
   from(c) {
-    var query = this._clone();
+    var query = clone(this);
     query.collection = c.value ? c.value : c.toString();
     return query;
   }
@@ -78,7 +82,7 @@ export default class Query {
     if (! this.collection)
       throw new Error("You need to set collection (from statement) before selecting metric");
 
-    var query = this._clone(),
+    var query = clone(this),
         part = new Part(this.collection, m);
 
     query.parts = query.parts.concat(part);
@@ -90,19 +94,19 @@ export default class Query {
   }
 
   beginningAt(t) {
-    var query = this._clone();
+    var query = clone(this);
     query.beginning = moment(t);
     return query;
   }
 
   endingAt(t) {
-    var query = this._clone();
+    var query = clone(this);
     query.ending = moment(t);
     return query;
   }
 
   last(...args) {
-    var query = this._clone();    
+    var query = clone(this);
     query.duration = moment.duration(...args);
     query.beginning = null;
     query.ending = null;
@@ -121,7 +125,7 @@ export default class Query {
 
   exec(ajax, options = {}) {
     var settings = {data: {}},
-        query = this._clone(),
+        query = clone(this),
         parts = query.parts,
         decoder = null;
 
@@ -186,12 +190,6 @@ export default class Query {
    * Internal methods
    */
 
-  _clone() {
-    var query = Object.create(Query.prototype);
-    Object.assign(query, this);
-    return query;
-  }
-
   _updatePart(method, ...args) {
     if (this.parts.length === -1) 
       throw new Error("You need to select something before doing any futher operations");
@@ -199,7 +197,7 @@ export default class Query {
     var parts = this.parts.concat(),
         lastIdx = parts.length - 1,
         last = parts[lastIdx],
-        query = this._clone(); 
+        query = clone(this);
 
     parts[lastIdx] = last[method](...args);
     query.parts = parts;
@@ -236,9 +234,27 @@ export default class Query {
   }
 
   _encodeParts(vars) {
+    var vs = this._defaultVars(),
+        encoded = [];
     if (this.vars)
-      vars = Object.assign({}, this.vars, vars);
-    return this.parts.map(p => { return p.toString(vars); });
+      Object.assign(vs, this.vars);
+    if (vars)
+      Object.assign(vs, vars);
+
+    for (let part of this.parts){
+      if (! part.excluded)
+        encoded.push(part.toString(vs));
+    };
+    return encoded;
+  }
+
+  _defaultVars() {
+    var vars = {};
+    for (let part of this.parts) {
+      if (part.name)
+        vars[part.name] = part;
+    }
+    return vars;
   }
 };
 
