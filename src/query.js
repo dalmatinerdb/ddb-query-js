@@ -123,11 +123,12 @@ export default class Query {
    * Non chain-able utilities
    */
 
-  exec(ajax, options = {}) {
+  exec(ajax, options = {}, wrapWithAbortable = true) {
     var settings = {data: {}},
         query = clone(this),
         parts = query.parts,
-        decoder = null;
+        decoder = null,
+        request;
 
     if (! ajax)
       throw new Error("Missing ajax function");
@@ -160,7 +161,8 @@ export default class Query {
     }
 
     Object.assign(settings, options);
-    return new AbortablePromise(ajax(settings))
+    request = ajax(settings);
+    return (wrapWithAbortable ? new AbortablePromise(request) : request)
       .then(decoder.decode);
   }
 
