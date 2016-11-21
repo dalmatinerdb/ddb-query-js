@@ -74,15 +74,15 @@ function decode(query, resp, options = {}) {
   // Second pass is to do actual decoding
   series = Object.keys(matched).map(function(key) {
     let {sections, qpart, r, v, c} = matched[key],
-        tagDefinitions = qpart.alias && qpart.alias.tags || [],
+        tagDefinitions = qpart.annotations && qpart.annotations.tags || [],
         tags = {},
         name;
 
     if (! v)
       throw new Error("Missing data channel in response to: " + qpart);
     
-    if (qpart.alias && qpart.alias.label) {
-      name = qpart.alias.label;
+    if (qpart.annotations && qpart.annotations.label) {
+      name = qpart.annotations.label;
     } else {
       name = qpart.selector.toString();
     }

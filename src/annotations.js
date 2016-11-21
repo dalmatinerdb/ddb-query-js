@@ -1,34 +1,45 @@
 import {clone} from "./utils.js";
 
 
-export default class Alias {
+export default class Annotations {
 
   static __schema = {
-    proto: Alias.prototype
+    proto: Annotations.prototype
   };
 
   constructor(label) {
     if (label !== void 0) this.label = label;
-    this.tags = [];
   }
 
-  useLabel(label) {
-    var alias = clone(this);
-    alias.label = label;
-    return alias;
-  }
-  
-  prefixWith(prefix) {
-    var alias = clone(this);
-    alias.prefix = prefix;
-    return alias;
+  labelBy(label) {
+    var annotations = clone(this);
+    annotations.label = label;
+    return annotations;
   }
 
   annotateWith(...tags) {
-    var alias = clone(this);
+    var annotations = clone(this);
     tags = tags.map(normalizeTag);
-    alias.tags = dedupTags(this.tags.concat(tags));
-    return alias;
+    annotations.tags = this.tags ? this.tags.concat(tags) : tags;
+    return annotations;
+  }
+
+  annotateWithStatic(fields, maybe_value) {
+    if (typeof fields === 'string')
+      return this.annotateWithStatic({[fields]: maybe_value});
+
+    var annotations = clone(this);
+    fields = Object.assign({}, this['static'], fields);
+    annotations['static'] = fields;
+    return annotations;
+  }
+
+  /*
+   * Reading methods
+   */
+
+  get(key) {
+    return this.static[key];
   }
 
   toString() {
@@ -36,7 +47,8 @@ export default class Alias {
   }
 
   _encode() {
-    var sections = this.prefix || [];
+    // Prefix is special static variable that is used for matching responses
+    var sections = this.static && this.static.__prefix || [];
     if (this.tags)
       sections = sections.concat(this.tags);
     if (this.label)
@@ -70,14 +82,10 @@ function normalizeTag(tag) {
   if (typeof tag === 'string') {
     let m = tag.match(/^(([a-z]*):)?(.*)$/);
     if (! m)
-      throw new Error("Invalid alias variable: " + tag);
+      throw new Error("Invalid annotations variable: " + tag);
     let ns = m[2],
         name = m[3];
     return [ns, name];
   }
   return tag;
-}
-
-function dedupTags(tags) {
-  return tags;
 }

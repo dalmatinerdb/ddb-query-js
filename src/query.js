@@ -1,6 +1,6 @@
 import moment from "moment";
 
-import {clone} from "./utils.js";
+import {clone, forward} from "./utils.js";
 import Condition from "./condition.js";
 import Part from "./part.js";
 import Decoder from "./decoder.js";
@@ -133,17 +133,18 @@ export default class Query {
       throw new Error("Missing ajax function");
 
     parts = parts.map((part, idx) => {
-      return part.prefixWith(['' + idx]);
+      return part.annotateWithStatic('__prefix', ['' + idx]);
     });
     if (options.applyConfidence) {
       parts = parts.reduce(function(acc, part) {
-        let prefix = part.alias.prefix,
-            vpart = part.prefixWith(prefix.concat('v')),
-            cpart = part.prefixWith(prefix.concat('c'))
+        let prefix = part.annotations.get('__prefix'),
+            vpart = part.annotateWithStatic('__prefix', prefix.concat('v')),
+            cpart = part.annotateWithStatic('__prefix', prefix.concat('c'))
               .apply('confidence');
         return acc.concat(vpart, cpart);
       }, []);
     }
+
     query.parts = parts;
     decoder = new Decoder(query, options),
     settings.data.q = query.toString();
@@ -190,7 +191,7 @@ export default class Query {
    * Internal methods
    */
 
-  _updatePart(method, ...args) {
+  _updatePart(method, args) {
     if (this.parts.length === -1) 
       throw new Error("You need to select something before doing any futher operations");
 
@@ -259,8 +260,4 @@ export default class Query {
 };
 
 
-PART_METHODS.forEach(function(method) {
-  Query.prototype[method] = function (...args) {
-    return this._updatePart(method, ...args);
-  };
-});
+forward(Query.prototype, '_updatePart', PART_METHODS);

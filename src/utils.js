@@ -8,3 +8,12 @@ export function clone(obj) {
   Object.assign(c, obj);
   return c;
 }
+
+
+export function forward(proto, target, methods) {
+  for (let method of methods) {
+    proto[method] = function(...args) {
+      return this[target](method, args);
+    };
+  }
+}

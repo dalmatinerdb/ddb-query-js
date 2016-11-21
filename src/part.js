@@ -1,6 +1,6 @@
-import {clone} from "./utils.js";
+import {clone, forward} from "./utils.js";
 import Selector from "./selector.js";
-import Alias from "./alias.js";
+import Annotations from "./annotations.js";
 import Function from "./function.js";
 
 
@@ -12,13 +12,19 @@ const SELECTOR_METHODS = [
   'shiftBy'
 ];
 
+// Annotations methods that are exposed on part level
+const ANNOTATIONS_METHODS = [
+  'labelBy',
+  'annotateWith',
+  'annotateWithStatic'
+];
 
 export default class Part {
 
   static __schema = {
     proto: Part.prototype,
     ref: {
-      alias: Alias.__schema,
+      annotations: Annotations.__schema,
       selector: Selector.__schema,
       fn: Function.__schema
     }
@@ -39,27 +45,6 @@ export default class Part {
   nameBy(name) {
     var part = clone(this);
     part.name = name;
-    return part;
-  }
-
-  labelBy(label) {
-    var part = clone(this),
-        alias = part.alias ? part.alias.useLabel(label) : new Alias(label);
-    part.alias = alias;
-    return part;
-  }
-
-  prefixWith(prefix) {
-    var part = clone(this),
-        alias = this.alias || new Alias();
-    part.alias = alias.prefixWith(prefix);
-    return part;
-  }
-
-  annotateWith(...tags) {
-    var part = clone(this),
-        alias = this.alias || new Alias();
-    part.alias = alias.annotateWith(...tags);
     return part;
   }
 
@@ -87,8 +72,8 @@ export default class Part {
       vars = {...vars, '__selector': this.selector};
       str = this.fn.toString(vars);
     }
-    if (this.alias)
-      str += ' ' + this.alias.toString();
+    if (this.annotations)
+      str += ' ' + this.annotations.toString();
     return str;
   }
 
@@ -96,16 +81,22 @@ export default class Part {
    * Internal methods
    */
 
-  _updateSelector(method, ...args) {
-    var selector = this.selector[method](...args);
-    this.selector = selector;
-    return this;
+  _updateSelector(method, args) {
+    var selector = this.selector[method](...args),
+        part = clone(this);
+    part.selector = selector;
+    return part;
+  }
+
+  _updateAnnotations(method, args) {
+    var annotations = this.annotations || new Annotations(),
+        part = clone(this);
+    annotations = annotations[method](...args);
+    part.annotations = annotations;
+    return part;
   }
 }
 
 
-SELECTOR_METHODS.forEach(function(method) {
-  Part.prototype[method] = function (...args) {
-    return this._updateSelector(method, ...args);
-  };
-});
+forward(Part.prototype, '_updateSelector', SELECTOR_METHODS);
+forward(Part.prototype, '_updateAnnotations', ANNOTATIONS_METHODS);

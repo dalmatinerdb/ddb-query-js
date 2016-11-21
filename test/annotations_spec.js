@@ -3,33 +3,33 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import source_map from 'source-map-support';
-import Alias from "./alias";
+import Annotations from "./annotations";
 
 source_map.install({handleUncaughtExceptions: false});
 
 
-describe('Alias', function() {
+describe('Annotations', function() {
   var expect = chai.expect,
-      alias = null;
+      annotations = null;
 
   beforeEach(function() {
-    alias = new Alias();
+    annotations = new Annotations();
   });
 
   describe('#annotateWith', function() {
 
-    it('should add tag to constructed alias', function() {
+    it('should add tag to constructed annotations', function() {
       expect(
-        alias
+        annotations
           .annotateWith(['dl', 'internal'])
           .toString()
       ).to.be
         .equal("AS $dl:'internal'");
     });
 
-    it('should work with alias', function() {
+    it('should work with annotations', function() {
       expect(
-        new Alias('custom-label')
+        new Annotations('custom-label')
           .annotateWith(['dl', 'internal'])
           .toString()
       ).to.be
@@ -38,7 +38,7 @@ describe('Alias', function() {
 
     it('should use shorter representation for tags in default namespace', function() {
       expect(
-        alias
+        annotations
           .annotateWith(['', 'custom-dimension'])
           .toString()
       ).to.be
@@ -47,7 +47,7 @@ describe('Alias', function() {
 
     it('should allow for multiple tags', function() {
       expect(
-        alias
+        annotations
           .annotateWith(['dl', 'hostname'],
                         ['dl', 'source'])
           .toString()
@@ -58,7 +58,7 @@ describe('Alias', function() {
 
     it('should parse tags provided in query variable format', function() {
       expect(
-        alias
+        annotations
           .annotateWith('custom')
           .toString()
       ).to.be
