@@ -123,14 +123,11 @@ export default class Query {
    * Non chain-able utilities
    */
 
-  exec(ajax, options = {}) {
+  request(options = {}) {
     var settings = {data: {}},
         query = clone(this),
         parts = query.parts,
         decoder = null;
-
-    if (! ajax)
-      throw new Error("Missing ajax function");
 
     parts = parts.map((part, idx) => {
       return part.prefixWith(['' + idx]);
@@ -147,7 +144,7 @@ export default class Query {
     query.parts = parts;
     decoder = new Decoder(query, options),
     settings.data.q = query.toString();
-    
+
     if (! options.url)
       settings.url = 'http://localhost:8080'; // Default url
 
@@ -159,7 +156,14 @@ export default class Query {
       settings.headers.accept = 'application/json';
     }
 
-    Object.assign(settings, options);
+    Object.assign(settings, options)
+    return { settings, decoder };
+  }
+
+  exec(ajax, options) {
+    if (! ajax)
+      throw new Error("Missing ajax function");
+    var { settings, decoder } = this.request(options);
     return new AbortablePromise(ajax(settings))
       .then(decoder.decode);
   }
