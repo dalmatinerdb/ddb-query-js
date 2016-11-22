@@ -1,6 +1,6 @@
 {
   "name": "ddb-query",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "DalmatinerDB query builder and response decoder.",
   "main": "lib/index.js",
   "scripts": {
