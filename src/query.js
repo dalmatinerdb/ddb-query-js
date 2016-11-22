@@ -156,7 +156,7 @@ export default class Query {
       settings.headers.accept = 'application/json';
     }
 
-    Object.assign(settings, options)
+    Object.assign(settings, options);
     return { settings, decoder };
   }
 
