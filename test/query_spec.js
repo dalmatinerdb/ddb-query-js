@@ -413,6 +413,43 @@ describe('Query', function() {
       ).to.be
         .equal("SELECT 'base'.'cpu' FROM 'best-org' AS $dl:'hostname'.$dl:'source'.$'custom'");
     });
+
+    it('should remove annotations for nested queries', function() {
+      expect(
+        query
+          .from('myorg')
+
+          .select(['base', 'cpu'])
+          .nameBy('A')
+          .annotateWith(['dl', 'hostname'])
+          .shiftBy('1d')
+          .exclude()
+
+          .select(['base', 'cpu'])
+          .nameBy('B')
+          .annotateWith(['dl', 'hostname'])
+          .apply('diff', ['$A'])
+          .toString()
+      ).to.be
+        .equal("SELECT diff('base'.'cpu' FROM 'myorg', 'base'.'cpu' FROM 'myorg' SHIFT BY 1d) AS $dl:'hostname'")
+    });
+    it('should remove request annotations for nested queries', function() {
+      expect(
+        query
+          .from('myorg')
+
+          .select(['base', 'cpu'])
+          .nameBy('A')
+          .shiftBy('1d')
+          .exclude()
+
+          .select(['base', 'cpu'])
+          .nameBy('B')
+          .apply('diff', ['$A'])
+          .request().settings.data.q
+      ).to.be
+        .equal("SELECT diff('base'.'cpu' FROM 'myorg', 'base'.'cpu' FROM 'myorg' SHIFT BY 1d) AS '1'")
+    });
   });
 
   describe('#exec', function() {
