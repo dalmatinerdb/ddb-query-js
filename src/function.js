@@ -31,7 +31,8 @@ export default class Function {
       if (arg === void 0)
         throw new Error(`Variable ${varname} is not declared`);
       if (typeof arg.toString === 'function')
-        arg = arg.toString(vars);
+        // convert to string, but drop alias as we are in a nested query
+        arg = arg.toString(vars, {includeAlias: false});
     } else if (typeof arg === 'object' && typeof arg.toString == 'function') {
       arg = arg.toString(vars);
     }
