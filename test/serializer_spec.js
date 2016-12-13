@@ -51,7 +51,12 @@ describe('Serializer', function() {
         .select(['base', 'cpu'])
         .apply('avg', ['$interval'])
         .apply('sum')
-        .with('interval', '15s')
+        .with('interval', '15s'),
+
+      query.from('my-org')
+        .select(['base', 'cpu', 'excluded'])
+        .exclude()
+        .select(['base', 'cpu', 'included'])
     ];
 
     for (let q of QUERIES) {
@@ -61,5 +66,24 @@ describe('Serializer', function() {
           .to.be.equal(qstring);
       });
     }
+  });
+  describe('toJSON', function(){
+    it('should serialize excluded to JSON', function () {
+
+      expect(
+        query.from('myorg').select(['base', 'cpu'])
+          .exclude().toJSON()
+      ).to.deep
+        .equal({
+          "collection": "myorg",
+          "parts": [{
+            "excluded": true,
+            "selector": {
+              "collection": "myorg",
+              "metric": ["base", "cpu"]
+            }
+          }]
+        });
+    });
   });
 });
