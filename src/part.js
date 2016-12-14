@@ -81,13 +81,13 @@ export default class Part {
     return part;
   }
 
-  toString(vars) {
+  toString(vars, options = {includeAlias: true}) {
     var str = '' + this.selector;
     if (this.fn) {
       vars = {...vars, '__selector': this.selector};
       str = this.fn.toString(vars);
     }
-    if (this.alias)
+    if (this.alias && options.includeAlias)
       str += ' ' + this.alias.toString();
     return str;
   }
