@@ -22,6 +22,7 @@ function anyToJSON (obj) {
   switch (typeof obj) {
   case 'number':
   case 'string':
+  case 'boolean':
     return obj;
   case 'function':
     return undefined;

@@ -401,20 +401,20 @@ describe('Query', function() {
   });
 
   describe('#annotateWith', function() {
-    it('should allow to build queries with tag annotations', function() {
+    it('should allow to build queries with tag annotations', function () {
       expect(
         query
           .from('best-org')
           .select(['base', 'cpu'])
           .annotateWith(['dl', 'hostname'],
-                        ['dl', 'source'],
-                        ['', 'custom'])
+            ['dl', 'source'],
+            ['', 'custom'])
           .toString()
       ).to.be
         .equal("SELECT 'base'.'cpu' FROM 'best-org' AS $dl:'hostname'.$dl:'source'.$'custom'");
     });
 
-    it('should remove annotations for nested queries', function() {
+    it('should remove annotations for nested queries', function () {
       expect(
         query
           .from('myorg')
@@ -433,7 +433,7 @@ describe('Query', function() {
       ).to.be
         .equal("SELECT diff('base'.'cpu' FROM 'myorg', 'base'.'cpu' FROM 'myorg' SHIFT BY 1d) AS $dl:'hostname'")
     });
-    it('should remove request annotations for nested queries', function() {
+    it('should remove request annotations for nested queries', function () {
       expect(
         query
           .from('myorg')
