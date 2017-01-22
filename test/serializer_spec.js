@@ -2,7 +2,7 @@
 
 import chai from 'chai';
 import source_map from 'source-map-support';
-import * as api from "./index";
+import * as api from "../src/index";
 
 source_map.install({handleUncaughtExceptions: false});
 

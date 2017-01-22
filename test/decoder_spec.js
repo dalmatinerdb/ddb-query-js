@@ -4,8 +4,8 @@ import chai from 'chai';
 import sinon from 'sinon';
 import source_map from 'source-map-support';
 import moment from 'moment';
-import Decoder from './decoder';
-import Query from './query';
+import Decoder from '../src/decoder';
+import Query from '../src/query';
 
 source_map.install({handleUncaughtExceptions: false});
 

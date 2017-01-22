@@ -4,7 +4,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import source_map from 'source-map-support';
-import Condition from "./condition";
+import Condition from "../src/condition";
 
 source_map.install({handleUncaughtExceptions: false});
 chai.use(sinonChai);
