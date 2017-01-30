@@ -41,6 +41,5 @@
   },
   "dependencies": {
     "moment": "^2.14.1"
-  },
-  "module": "lib/index.mjs"
+  }
 }
