@@ -175,6 +175,24 @@ describe('Decoder', function () {
       .that.is.deep.equal({'note': "Don't mind quotes! (Even with second ')"});
   });
 
+  it('should not get confused by dots in annotated data', function () {
+    expect(
+      data({s: 1472738400,
+            d: [{
+              n: "'0'.'dotted.name'.'last_part'",
+              r: 1000,
+              v: [5, 6, 7]}]})
+        .commingFromQuery(new Query().from('my-org')
+                          .select(['base', 'cpu'])
+                          .annotateWith('dotted')
+                          .annotateWith('suffix'))
+        .afterDecoding()
+    ).to.have
+      .deep.property('series[0].tags')
+      .that.is.deep.equal({'dotted': 'dotted.name',
+                           'suffix': 'last_part'});
+  });
+
   it('should combine and apply confidence if such option was present', function () {
     expect(
       data(

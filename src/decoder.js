@@ -125,17 +125,33 @@ function decodeConfidencePoints(values, confidence, start, increment) {
   return r;
 }
 
-
 function decodeN(n) {
-  return n.split('.').map(decodeNSection);
-}
-
-
-function decodeNSection(section) {
-  if (section[0] == "'" && section[section.length - 1] == "'") {
-    section = section.slice(1, -1).replace(/\\(.)/g, '$1');
+  var parts = [],
+      quote = '',
+      escaped = false,
+      stack = '';
+  for (var c of n) {
+    if (escaped) {
+      // If this character is escaped we put in on stack no matter what it is
+      stack += c;
+      escaped = false;
+    } else if (c === '\\') {
+      escaped = true;
+    } else if (c === quote) {
+      // closeing quote is skipped too and rests state
+      quote = '';
+    } else if (c === '\'' || c === '"') {
+      // opening quote is skipped but changes state
+      quote = c;
+    } else if (quote === '' && c === '.') {
+      parts.push(stack);
+      stack = '';
+    } else {
+      stack += c;
+    }
   }
-  return section;
+  parts.push(stack);
+  return parts;
 }
 
 function tagKey(tag) {
