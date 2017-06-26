@@ -3,7 +3,7 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import source_map from 'source-map-support';
-import Alias from "./alias";
+import Alias from "../src/alias";
 
 source_map.install({handleUncaughtExceptions: false});
 

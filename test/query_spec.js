@@ -4,8 +4,8 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import source_map from 'source-map-support';
-import Query from "./query";
-import * as api from "./index";
+import Query from "../src/query";
+import * as api from "../src/index";
 
 source_map.install({handleUncaughtExceptions: false});
 chai.use(sinonChai);
